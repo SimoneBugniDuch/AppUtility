@@ -1,0 +1,9 @@
+C:\Users\DELL\Desktop\AppUtility\app_utility\target\debug\deps\libunicode_segmentation-117ebd332516d125.rmeta: C:\Users\DELL\.cargo\registry\src\index.crates.io-6f17d22bba15001f\unicode-segmentation-1.10.1\src\lib.rs C:\Users\DELL\.cargo\registry\src\index.crates.io-6f17d22bba15001f\unicode-segmentation-1.10.1\src\grapheme.rs C:\Users\DELL\.cargo\registry\src\index.crates.io-6f17d22bba15001f\unicode-segmentation-1.10.1\src\sentence.rs C:\Users\DELL\.cargo\registry\src\index.crates.io-6f17d22bba15001f\unicode-segmentation-1.10.1\src\word.rs C:\Users\DELL\.cargo\registry\src\index.crates.io-6f17d22bba15001f\unicode-segmentation-1.10.1\src\tables.rs
+
+C:\Users\DELL\Desktop\AppUtility\app_utility\target\debug\deps\unicode_segmentation-117ebd332516d125.d: C:\Users\DELL\.cargo\registry\src\index.crates.io-6f17d22bba15001f\unicode-segmentation-1.10.1\src\lib.rs C:\Users\DELL\.cargo\registry\src\index.crates.io-6f17d22bba15001f\unicode-segmentation-1.10.1\src\grapheme.rs C:\Users\DELL\.cargo\registry\src\index.crates.io-6f17d22bba15001f\unicode-segmentation-1.10.1\src\sentence.rs C:\Users\DELL\.cargo\registry\src\index.crates.io-6f17d22bba15001f\unicode-segmentation-1.10.1\src\word.rs C:\Users\DELL\.cargo\registry\src\index.crates.io-6f17d22bba15001f\unicode-segmentation-1.10.1\src\tables.rs
+
+C:\Users\DELL\.cargo\registry\src\index.crates.io-6f17d22bba15001f\unicode-segmentation-1.10.1\src\lib.rs:
+C:\Users\DELL\.cargo\registry\src\index.crates.io-6f17d22bba15001f\unicode-segmentation-1.10.1\src\grapheme.rs:
+C:\Users\DELL\.cargo\registry\src\index.crates.io-6f17d22bba15001f\unicode-segmentation-1.10.1\src\sentence.rs:
+C:\Users\DELL\.cargo\registry\src\index.crates.io-6f17d22bba15001f\unicode-segmentation-1.10.1\src\word.rs:
+C:\Users\DELL\.cargo\registry\src\index.crates.io-6f17d22bba15001f\unicode-segmentation-1.10.1\src\tables.rs:
