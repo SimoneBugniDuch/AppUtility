@@ -1,0 +1,10 @@
+C:\Users\evebr\Desktop\Università\LM I Anno\PROGRAMMAZIONE DI SISTEMA\Malnati\AppUtility\app_utility\target\debug\deps\arboard-0de96fdac4725546.rmeta: C:\Users\evebr\.cargo\registry\src\index.crates.io-6f17d22bba15001f\arboard-3.3.0\src\lib.rs C:\Users\evebr\.cargo\registry\src\index.crates.io-6f17d22bba15001f\arboard-3.3.0\src\common.rs C:\Users\evebr\.cargo\registry\src\index.crates.io-6f17d22bba15001f\arboard-3.3.0\src\platform\mod.rs C:\Users\evebr\.cargo\registry\src\index.crates.io-6f17d22bba15001f\arboard-3.3.0\src\platform\windows.rs
+
+C:\Users\evebr\Desktop\Università\LM I Anno\PROGRAMMAZIONE DI SISTEMA\Malnati\AppUtility\app_utility\target\debug\deps\libarboard-0de96fdac4725546.rlib: C:\Users\evebr\.cargo\registry\src\index.crates.io-6f17d22bba15001f\arboard-3.3.0\src\lib.rs C:\Users\evebr\.cargo\registry\src\index.crates.io-6f17d22bba15001f\arboard-3.3.0\src\common.rs C:\Users\evebr\.cargo\registry\src\index.crates.io-6f17d22bba15001f\arboard-3.3.0\src\platform\mod.rs C:\Users\evebr\.cargo\registry\src\index.crates.io-6f17d22bba15001f\arboard-3.3.0\src\platform\windows.rs
+
+C:\Users\evebr\Desktop\Università\LM I Anno\PROGRAMMAZIONE DI SISTEMA\Malnati\AppUtility\app_utility\target\debug\deps\arboard-0de96fdac4725546.d: C:\Users\evebr\.cargo\registry\src\index.crates.io-6f17d22bba15001f\arboard-3.3.0\src\lib.rs C:\Users\evebr\.cargo\registry\src\index.crates.io-6f17d22bba15001f\arboard-3.3.0\src\common.rs C:\Users\evebr\.cargo\registry\src\index.crates.io-6f17d22bba15001f\arboard-3.3.0\src\platform\mod.rs C:\Users\evebr\.cargo\registry\src\index.crates.io-6f17d22bba15001f\arboard-3.3.0\src\platform\windows.rs
+
+C:\Users\evebr\.cargo\registry\src\index.crates.io-6f17d22bba15001f\arboard-3.3.0\src\lib.rs:
+C:\Users\evebr\.cargo\registry\src\index.crates.io-6f17d22bba15001f\arboard-3.3.0\src\common.rs:
+C:\Users\evebr\.cargo\registry\src\index.crates.io-6f17d22bba15001f\arboard-3.3.0\src\platform\mod.rs:
+C:\Users\evebr\.cargo\registry\src\index.crates.io-6f17d22bba15001f\arboard-3.3.0\src\platform\windows.rs:
