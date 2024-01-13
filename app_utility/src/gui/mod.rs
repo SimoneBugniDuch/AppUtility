@@ -1,7 +1,7 @@
 use std::sync::mpsc::{Sender, Receiver, channel};
 
 use eframe::{NativeOptions, run_native, App, Frame};
-use eframe::egui::{Align, Context, TopBottomPanel, Layout};
+use eframe::egui::{Align, Context, TopBottomPanel, Layout, Button};
 use image::DynamicImage;
 use screenshots::display_info;
 
