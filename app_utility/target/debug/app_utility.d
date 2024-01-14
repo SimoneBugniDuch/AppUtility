@@ -1,1 +1,0 @@
-C:\Users\nikig\Desktop\pds\AppUtility\app_utility\target\debug\app_utility.exe: C:\Users\nikig\Desktop\pds\AppUtility\app_utility\src\gui\mod.rs C:\Users\nikig\Desktop\pds\AppUtility\app_utility\src\main.rs
