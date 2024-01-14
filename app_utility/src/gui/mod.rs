@@ -1,3 +1,6 @@
+mod shortcut;
+mod actions;
+
 use eframe::egui::{self, CentralPanel, Color32, Style, TopBottomPanel, Visuals};
 use eframe::{run_native, App, Frame, NativeOptions};
 
@@ -53,12 +56,12 @@ impl App for AppUtility {
                             ui.add_space(10.0);
 
                             // BUTTONS
-                            if ui.button("🖵 fullscreen shot").clicked() {
+                            if ui.button("🖵 Fullscreen shot").clicked() {
                                 // TODO:
                                 println!("full screenshot");
                             }
                             ui.add_space(6.0); // Space between buttons
-                            if ui.button("⛶ area shot").clicked() {
+                            if ui.button("⛶ Area shot").clicked() {
                                 // TODO:
                                 println!("area screenshot");
                             }
