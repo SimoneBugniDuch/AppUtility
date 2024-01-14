@@ -1,17 +1,49 @@
 mod shortcut;
 mod actions;
+mod screenshots;
 
-use eframe::egui::{self, CentralPanel, Color32, Style, TopBottomPanel, Visuals};
-use eframe::{run_native, App, Frame, NativeOptions};
+use std::time::Duration;
 
+use chrono::Local;
+// use eframe::egui::{self, CentralPanel, Color32, Style, TopBottomPanel, Visuals};
+use eframe::{egui::{self, CentralPanel, Color32, Style, TopBottomPanel, Visuals, Window, Layout}, Frame, run_native, App, NativeOptions};
+// use eframe::{run_native, App, Frame, NativeOptions};
+use image;
 
-#[derive(Default)]
-struct AppUtility {}
+use self::actions::Action;
+use self::screenshots::Screenshots;
+use self::shortcut::NewShortcut;
+
+struct AppUtility {
+    rectangle: Rectangle,
+    default_path: String,
+    new_shortcut: NewShortcut,
+    default_name: String,
+    hide: bool,
+    screenshots: Screenshots,
+    buffer: Option<Vec<u8>>,
+}
+
+struct Rectangle {
+    x: f32,
+    y: f32,
+    width: f32,
+    height: f32,
+}
 
 impl AppUtility {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
         cc.egui_ctx.set_visuals(Visuals::light());
-        Default::default()
+        // Default::default()
+        Self {
+            rectangle: Rectangle { x: 0.0, y: 0.0, width: 0.0, height: 0.0 },
+            default_path: "screenshot".to_string(),
+            new_shortcut: NewShortcut::default(),
+            default_name: build_default_name(),
+            hide: false,
+            screenshots: Screenshots::new(),
+            buffer: None,
+        }
     }
 
     fn configure_ui_style(&self, ctx: &egui::Context) {
@@ -35,10 +67,25 @@ impl AppUtility {
 
         ctx.set_style(style);
     }
+
+    fn make_action(&mut self, action: Action, ctx: &egui::Context, frame: &mut Frame) {
+        match action {
+            Action::Capture => {
+                self.hide = true;
+                frame.set_visible(false);
+            },
+            Action::Close => {},
+            Action::Copy => {},
+            Action::Modify => {},
+            Action::NewScreenshot => {},
+            Action::Save => {},
+            Action::Undo => {}
+        }
+    }
 }
 
 impl App for AppUtility {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut Frame) {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut Frame) {
         self.configure_ui_style(ctx);
 
         TopBottomPanel::top("navbar").show(ctx, |ui| {
@@ -85,6 +132,29 @@ impl App for AppUtility {
         CentralPanel::default().show(ctx, |_ui| {
             // ui.heading("Hello World!");
         });
+
+        if self.hide {
+            std::thread::sleep(Duration::from_millis(400));
+            let mut screen = self.screenshots.get_screen();
+            let img = screen.capture().unwrap();
+            self.buffer = Some(img.to_png(None).unwrap());
+            frame.set_visible(false);
+            Window::new("New screenshot")
+                .title_bar(false)
+                .show(ctx, |ui| {
+                    ui.with_layout(
+                        Layout {
+                            main_dir: egui::Direction::LeftToRight,
+                            main_wrap: false,
+                            main_align: egui::Align::Center,
+                            main_justify: false,
+                            cross_align: egui::Align::Center,
+                            cross_justify: false,
+                        }, |ui| {
+
+                        })
+                });
+        }
     }
 }
 
@@ -105,4 +175,9 @@ pub fn window() -> eframe::Result<()> {
         options,
         Box::new(|cc: &eframe::CreationContext<'_>| Box::new(AppUtility::new(cc))),
     )
+}
+
+fn build_default_name() -> String {
+    let now = Local::now().to_string();
+    format!("screenshot{}", now)
 }

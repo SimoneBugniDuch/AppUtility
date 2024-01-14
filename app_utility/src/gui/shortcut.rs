@@ -1,3 +1,4 @@
+use eframe::egui;
 use egui::{Modifiers, Key, KeyboardShortcut};
 use super::actions::Action;
 
