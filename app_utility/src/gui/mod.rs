@@ -1,77 +1,73 @@
-use std::sync::mpsc::{Sender, Receiver, channel};
+use eframe::egui::style::Spacing;
+use eframe::egui::{self, Color32, Style, TopBottomPanel, Visuals, CentralPanel};
+use eframe::{run_native, App, Frame, NativeOptions};
 
-use eframe::{NativeOptions, run_native, App, Frame};
-use eframe::egui::{Align, Context, TopBottomPanel, Layout, Button};
-use image::DynamicImage;
-use screenshots::display_info;
-
-#[derive(PartialEq, Eq)]
-enum Action {
-    None,
-    Screenshot
-}
-
-struct AppUtility {
-    display: Option<usize>,
-    timer: Option<usize>,
-    sender: Sender<DynamicImage>,
-    receiver: Receiver<DynamicImage>,
-    current_screen: Option<DynamicImage>,
-    action: Action,
-}
+#[derive(Default)]
+struct AppUtility {}
 
 impl AppUtility {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        let context = cc.egui_ctx.clone();
-        let (sender, receiver) = channel();
-
-        AppUtility {
-            display: Some(0),
-            timer: Some(0),
-            sender,
-            receiver,
-            current_screen: None,
-            action: Action::None
-        }
+        cc.egui_ctx.set_visuals(Visuals::light());
+        Default::default()
     }
 
-    fn top_panel_view(&mut self, ctx: &Context, frame: &mut Frame) {
-        TopBottomPanel::top("top panel").show(ctx, |ui| {
-            ui.with_layout(Layout::left_to_right(Align::Center), |ui| {
-                if self.action == Action::None {
-                    let screenshot_btn: eframe::egui::Response = ui.add(Button::new("➕ New")).on_hover_text("Take screenshot of selected display");
-                    if screenshot_btn.clicked() {
-                        self.action = Action::Screenshot;
-                    }
-                    
-            } else {
-                let cancel_btn = ui.add(Button::new("❌ Cancel")).on_hover_text("Cancel");
-                if cancel_btn.clicked() {
-                    self.action = Action::None;
-                }
-            }
-            });
-        });
+    fn configure_ui_style(&self, ctx: &egui::Context) {
+        let mut style: Style = (*ctx.style()).clone();
+        // Customize the button visuals
+        style.visuals.widgets.inactive.bg_fill = egui::Color32::from_gray(200); // Background color
+        style.visuals.widgets.inactive.rounding = egui::Rounding::same(10.0); // Rounded corners
+        style.visuals.widgets.inactive.fg_stroke.color = egui::Color32::BLACK; // Text color
+
+        style.visuals.widgets.hovered.bg_fill = Color32::from_rgb(100, 100, 100); // Background color
+        style.visuals.widgets.hovered.rounding = egui::Rounding::same(10.0); // Rounded corners
+        style.visuals.widgets.hovered.fg_stroke.color = egui::Color32::BLACK; // Text color
+
+        // Add padding around the text
+        style.spacing.button_padding = egui::Vec2::new(10.0, 5.0); // Horizontal and Vertical padding
+
+        // Customize the button font size
+        if let Some(button_style) = style.text_styles.get_mut(&egui::TextStyle::Button) {
+            button_style.size = 20.0;
+        }
+
+        ctx.set_style(style);
     }
 }
 
 impl App for AppUtility {
-    fn update(&mut self, ctx: &Context, frame: &mut Frame) {
-        // match self.receiver.try_recv() {
-        //     Ok(screenshot) => {
-        //         self.current_screen = Some(screenshot);
-        //     },
-        //     Err(_) => {}
-        // };
-        self.top_panel_view(ctx, frame);
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut Frame) {
+        self.configure_ui_style(ctx);
+        TopBottomPanel::top("navbar").show(ctx, |ui| {
+            ui.add_space(3.0);
+            if ui.button("+ NEW").clicked() {
+                println!("delete");
+            }
+            ui.add_space(3.0);
+        });
+        CentralPanel::default().show(ctx, |ui| {
+            // ui.heading("Hello World!"); 
+        });
+
     }
 }
 
 pub fn window() -> eframe::Result<()> {
-    let options: NativeOptions = NativeOptions::default();
+    let options = NativeOptions {
+        viewport: egui::ViewportBuilder::default()
+            .with_maximized(true)
+            .with_title("AppUtility")
+            .with_inner_size(eframe::egui::Vec2::new(800.0, 300.0)) // Set the initial window size
+            .with_app_id("app_utility".to_owned()), // Set the application ID,
+        follow_system_theme: false,
+        default_theme: eframe::Theme::Light,
+        run_and_return: false, // Determines app behavior when main window is closed
+        centered: true,        // Center the window on startup
+        ..Default::default()
+    };
+
     run_native(
-        "AppUtility", 
-    options, 
-    Box::new(|cc: &eframe::CreationContext<'_>| Box::new(AppUtility::new(cc)))
+        "AppUtility",
+        options,
+        Box::new(|cc: &eframe::CreationContext<'_>| Box::new(AppUtility::new(cc))),
     )
 }
