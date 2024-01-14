@@ -40,7 +40,7 @@ impl App for AppUtility {
         TopBottomPanel::top("navbar").show(ctx, |ui| {
             ui.add_space(3.0);
             if ui.button("+ NEW").clicked() {
-                println!("delete");
+                println!("new");
             }
             ui.add_space(3.0);
         });
@@ -52,6 +52,7 @@ impl App for AppUtility {
 }
 
 pub fn window() -> eframe::Result<()> {
+    // Set the main window configuration options
     let options = NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_maximized(true)
