@@ -1,0 +1,1 @@
+cargo:rustc-env=MIME_TYPES_GENERATED_PATH=C:\Users\nikig\Desktop\pds\AppUtility\app_utility\target\debug\build\mime_guess2-7c88e13c98d4200d\out\mime_types_generated.rs
