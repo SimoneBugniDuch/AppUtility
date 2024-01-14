@@ -1,6 +1,6 @@
-use eframe::egui::style::Spacing;
 use eframe::egui::{self, CentralPanel, Color32, Style, TopBottomPanel, Visuals};
 use eframe::{run_native, App, Frame, NativeOptions};
+
 
 #[derive(Default)]
 struct AppUtility {}
@@ -39,19 +39,19 @@ impl App for AppUtility {
         self.configure_ui_style(ctx);
 
         TopBottomPanel::top("navbar").show(ctx, |ui| {
-            ui.add_space(3.0);
+            ui.add_space(6.0);
 
             // Use a horizontal layout to control the positioning of the menu button
             ui.horizontal(|ui| {
                 ui.add_space(10.0); // Space on the left side of the menu button
 
-                ui.menu_button("+ NEW", |ui| {
+                ui.menu_button("➕ NEW", |ui| {
                     ui.set_min_width(250.0);
                     ui.horizontal(|ui| {
                         ui.add_space(10.0);
                         ui.vertical(|ui| {
                             ui.add_space(10.0);
-                    
+
                             // BUTTONS
                             if ui.button("🖵 fullscreen shot").clicked() {
                                 // TODO:
@@ -67,11 +67,16 @@ impl App for AppUtility {
                         });
                     });
                 });
+                // This spacer will push the next items to the right
+                ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+                    ui.add_space(ui.available_width() - ui.spacing().item_spacing.x - 180.0);
+                });
 
-                ui.add_space(10.0); // Space on the right side of the menu button
+                if ui.button(" 🔧 SETTINGS").clicked() {}
+                ui.add_space(10.0); // Space on the right side of the navbar
             });
 
-            ui.add_space(3.0);
+            ui.add_space(6.0);
         });
 
         CentralPanel::default().show(ctx, |_ui| {
@@ -83,11 +88,8 @@ impl App for AppUtility {
 pub fn window() -> eframe::Result<()> {
     // Set the main window configuration options
     let options = NativeOptions {
-        viewport: egui::ViewportBuilder::default()
-            .with_maximized(true)
-            .with_title("AppUtility")
-            .with_inner_size(eframe::egui::Vec2::new(800.0, 300.0)) // Set the initial window size
-            .with_app_id("app_utility".to_owned()), // Set the application ID,
+        maximized: true,
+        initial_window_size: Some(egui::Vec2::new(600.0, 300.0)),
         follow_system_theme: false,
         default_theme: eframe::Theme::Light,
         run_and_return: false, // Determines app behavior when main window is closed
