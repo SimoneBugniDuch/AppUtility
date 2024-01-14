@@ -1,5 +1,5 @@
 use eframe::egui::style::Spacing;
-use eframe::egui::{self, Color32, Style, TopBottomPanel, Visuals, CentralPanel};
+use eframe::egui::{self, CentralPanel, Color32, Style, TopBottomPanel, Visuals};
 use eframe::{run_native, App, Frame, NativeOptions};
 
 #[derive(Default)]
@@ -27,7 +27,7 @@ impl AppUtility {
 
         // Customize the button font size
         if let Some(button_style) = style.text_styles.get_mut(&egui::TextStyle::Button) {
-            button_style.size = 20.0;
+            button_style.size = 24.0;
         }
 
         ctx.set_style(style);
@@ -37,21 +37,46 @@ impl AppUtility {
 impl App for AppUtility {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut Frame) {
         self.configure_ui_style(ctx);
-        
+
         TopBottomPanel::top("navbar").show(ctx, |ui| {
             ui.add_space(3.0);
-            if ui.button("+ NEW")
-            .on_hover_text("Take a new screenshot")
-            .clicked() {
-                println!("new");
-            }
+
+            // Use a horizontal layout to control the positioning of the menu button
+            ui.horizontal(|ui| {
+                ui.add_space(10.0); // Space on the left side of the menu button
+
+                ui.menu_button("+ NEW", |ui| {
+                    ui.set_min_width(250.0);
+                    ui.horizontal(|ui| {
+                        ui.add_space(10.0);
+                        ui.vertical(|ui| {
+                            ui.add_space(10.0);
+                    
+                            // BUTTONS
+                            if ui.button("🖵 fullscreen shot").clicked() {
+                                // TODO:
+                                println!("full screenshot");
+                            }
+                            ui.add_space(6.0); // Space between buttons
+                            if ui.button("⛶ area shot").clicked() {
+                                // TODO:
+                                println!("area screenshot");
+                            }
+
+                            ui.add_space(10.0); // Space at the bottom of the menu
+                        });
+                    });
+                });
+
+                ui.add_space(10.0); // Space on the right side of the menu button
+            });
+
             ui.add_space(3.0);
         });
-        
-        CentralPanel::default().show(ctx, |ui| {
-            // ui.heading("Hello World!"); 
-        });
 
+        CentralPanel::default().show(ctx, |_ui| {
+            // ui.heading("Hello World!");
+        });
     }
 }
 
