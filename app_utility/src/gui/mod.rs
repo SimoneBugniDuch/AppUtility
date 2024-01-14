@@ -37,13 +37,17 @@ impl AppUtility {
 impl App for AppUtility {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut Frame) {
         self.configure_ui_style(ctx);
+        
         TopBottomPanel::top("navbar").show(ctx, |ui| {
             ui.add_space(3.0);
-            if ui.button("+ NEW").clicked() {
+            if ui.button("+ NEW")
+            .on_hover_text("Take a new screenshot")
+            .clicked() {
                 println!("new");
             }
             ui.add_space(3.0);
         });
+        
         CentralPanel::default().show(ctx, |ui| {
             // ui.heading("Hello World!"); 
         });
