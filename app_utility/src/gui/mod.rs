@@ -20,6 +20,7 @@ struct AppUtility {
     new_shortcut: NewShortcut,
     default_name: String,
     hide: bool,
+    mode: Mode,
     screenshots: Screenshots,
     buffer: Option<Vec<u8>>,
 }
@@ -29,6 +30,11 @@ struct Rectangle {
     y: f32,
     width: f32,
     height: f32,
+}
+
+enum Mode {
+    Fullscreen,
+    Area,
 }
 
 impl AppUtility {
@@ -41,6 +47,7 @@ impl AppUtility {
             new_shortcut: NewShortcut::default(),
             default_name: build_default_name(),
             hide: false,
+            mode: Mode::Fullscreen,
             screenshots: Screenshots::new(),
             buffer: None,
         }
@@ -105,11 +112,15 @@ impl App for AppUtility {
                             // BUTTONS
                             if ui.button("🖵 Fullscreen shot").clicked() {
                                 // TODO:
+                                self.mode = Mode::Fullscreen;
+                                self.make_action(Action::Capture, ctx, frame);
                                 println!("full screenshot");
                             }
                             ui.add_space(6.0); // Space between buttons
                             if ui.button("⛶ Area shot").clicked() {
                                 // TODO:
+                                self.mode = Mode::Area;
+                                self.make_action(Action::Capture, ctx, frame);
                                 println!("area screenshot");
                             }
 
@@ -135,8 +146,19 @@ impl App for AppUtility {
 
         if self.hide {
             std::thread::sleep(Duration::from_millis(400));
-            let mut screen = self.screenshots.get_screen();
-            let img = screen.capture().unwrap();
+            let mut screen ;
+            let img ;
+            match self.mode {
+                Mode::Fullscreen => {
+                    screen = self.screenshots.get_screen();
+                    img = screen.capture().unwrap();
+                },
+                Mode::Area => {
+                    //cambiare in maniera da prendere solo una porzione dello schermo
+                    screen = self.screenshots.get_screen();
+                    img = screen.capture_area(self.rectangle.x.floor() as i32, self.rectangle.y.floor() as i32, self.rectangle.width.floor() as u32, self.rectangle.height.floor() as u32).unwrap();
+                }
+            }
             self.buffer = Some(img.to_png(None).unwrap());
             frame.set_visible(false);
             Window::new("New screenshot")
