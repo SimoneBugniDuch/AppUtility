@@ -76,7 +76,6 @@ impl AppUtility {
             Action::Capture => {
                 self.hide = true;
                 frame.set_visible(false);
-                println!("Running the action");
             }
             Action::Close => {
                 frame.close();
