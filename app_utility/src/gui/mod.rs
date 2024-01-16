@@ -2,8 +2,8 @@ mod actions;
 mod screenshots;
 mod shortcut;
 
-use std::{array::from_mut, sync::Arc, time::Duration};
-
+use std::{sync::Arc, time::Duration, fs};
+use native_dialog::FileDialog;
 use chrono::Local;
 use eframe::{
     egui::{self, text, Color32, Layout, Sense, TextureHandle, Visuals, Window},
@@ -87,10 +87,15 @@ impl AppUtility {
                 self.selecting_area = false;
             }
             Action::Modify => {}
-            Action::NewScreenshot => {}
+            Action::NewScreenshot => {
+                self.hide = false;
+                self.view_image = false;
+                self.selection_mode = Selection::Fullscreen;
+                self.show_settings = false;
+            }
             Action::Save => {
                 let mut filename = build_default_name();
-                if !self.default_name_selected {
+                if self.default_name_selected {
                     if self.default_number != 0 {
                         filename = format!("{}_{}", self.default_name, self.default_number);
                         self.default_number += 1;
@@ -98,6 +103,34 @@ impl AppUtility {
                         filename = self.default_name.clone();
                         self.default_number += 1;
                     }
+                }
+                let mut dir = std::env::current_dir().unwrap();
+                dir.push(&self.default_path);
+                if !dir.exists() {
+                    dir = std::env::current_dir().unwrap();
+                    dir.push("screenshots");
+                }
+                let res = match FileDialog::new()
+                    .set_location(&dir)
+                    .set_filename(&filename)
+                    .add_filter("PNG Image", &["png"])
+                    .add_filter("JPEG Image", &["jpg", "jpeg"])
+                    .add_filter("GIF Image", &["gif"])
+                    .show_save_single_file()
+                {
+                    Ok(res) => res,
+                    Err(_) => FileDialog::new()
+                        .set_location("~")
+                        .set_filename(&filename)
+                        .add_filter("PNG Image", &["png"])
+                        .add_filter("JPEG Image", &["jpg", "jpeg"])
+                        .add_filter("GIF Image", &["gif"])
+                        .show_save_single_file()
+                        .unwrap(),
+                };
+                match res {
+                    Some(res) => fs::write(res.clone(), self.buffer.clone().unwrap()).unwrap(),
+                    None => {}
                 }
             }
             Action::SelectArea => {
@@ -149,6 +182,7 @@ impl App for AppUtility {
             ));
             self.hide = false;
             self.view_image = true;
+            self.selecting_area = false;
             frame.set_visible(true);
         }
 
@@ -233,9 +267,14 @@ impl App for AppUtility {
             });
 
         Window::new("Screenshot taken")
+        //TODO: QUI BISOGNA INSERIRE I BOTTONI DI MODIFICA, DI COPIA ECC...
             .title_bar(false)
             .open(&mut self.view_image.clone())
             .frame(egui::Frame {
+                fill: egui::Color32::GRAY,
+                stroke: egui::Stroke::new(0.5, egui::Color32::BLACK),
+                inner_margin: egui::style::Margin::same(15.0),
+                rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
             .fixed_size([600.0, 50.0])
@@ -253,6 +292,28 @@ impl App for AppUtility {
                     |ui| {
                         if self.view_image {
                             println!("Now I'm seeing the image");
+                            if custom_button(ui, "Modify", Color32::BLACK, Color32::GRAY).clicked() {
+                                self.make_action(Action::Modify, ctx, frame);
+                            }
+                            if custom_button(ui, "Save", Color32::BLACK, Color32::GRAY).clicked() {
+                                self.make_action(Action::Save, ctx, frame);
+                            }
+                            if custom_button(ui, "Copy", Color32::BLACK, Color32::GRAY).clicked() {
+                                self.make_action(Action::Copy, ctx, frame);
+                            }
+                            if custom_button(ui, "New screenshot", Color32::BLACK, Color32::GRAY).clicked() {
+                                self.make_action(Action::NewScreenshot, ctx, frame);
+                                //Magari se ci sono delle modifiche non salvate conviene chiedere conferma (Discard all unsaved changes?)
+                            }
+                            if custom_button(ui, "Settings", Color32::BLACK, Color32::GRAY).clicked() {
+                                self.make_action(Action::Settings, ctx, frame);
+                            }
+                            if circular_button(ui, " x ", egui::Color32::WHITE, egui::Color32::from_rgb(210, 69, 69), 20.0,)
+                            .on_hover_text("Close the app")
+                            .clicked()
+                            {
+                                self.make_action(Action::Close, ctx, frame);
+                            }
                         }
                     },
                 )
@@ -546,8 +607,8 @@ fn circular_button(
 }
 
 fn build_default_name() -> String {
-    let now = Local::now().to_string();
-    format!("screenshot{}", now)
+    let now = Local::now().to_string().replace("-", "").replace(":", "_").replace(" ", "-");
+    format!("Screenshot_{}", now)[..28].to_string()
 }
 
 fn resize_to_fit_container(
