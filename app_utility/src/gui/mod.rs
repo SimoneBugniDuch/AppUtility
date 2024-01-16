@@ -18,11 +18,12 @@ struct AppUtility {
     new_shortcut: NewShortcut,
     default_name: String,
     hide: bool,
-    mode: Mode,
+    selection_mode: Selection,
     screenshots: Screenshots,
     buffer: Option<Vec<u8>>,
     view_image: bool,
     texture: Option<TextureHandle>,
+    selecting_area: bool,
 }
 
 struct Rectangle {
@@ -32,7 +33,7 @@ struct Rectangle {
     height: f32,
 }
 
-enum Mode {
+enum Selection {
     Fullscreen,
     Area,
 }
@@ -46,7 +47,8 @@ impl AppUtility {
             new_shortcut: NewShortcut::default(),
             default_name: build_default_name(),
             hide: false,
-            mode: Mode::Fullscreen,
+            selection_mode: Selection::Fullscreen,
+            selecting_area: false,
             screenshots: Screenshots::new(),
             buffer: None,
             view_image: false,
@@ -68,6 +70,14 @@ impl AppUtility {
             Action::Modify => {},
             Action::NewScreenshot => {},
             Action::Save => {},
+            Action::SelectArea => {
+                self.selection_mode = Selection::Area;
+                self.selecting_area = true;
+            },
+            Action::SelectFullscreen => {
+                self.selection_mode = Selection::Fullscreen;
+                self.selecting_area = false;
+            },
             Action::Undo => {}
         }
     }
@@ -81,11 +91,12 @@ impl App for AppUtility {
             std::thread::sleep(Duration::from_millis(300));
             let mut screen = self.screenshots.get_screen();
             let img;
-            match self.mode {
-                Mode::Area => {
+            match self.selection_mode {
+                Selection::Area => {
                     img = screen.capture_area(self.rectangle.x.floor() as i32, self.rectangle.y.floor() as i32, self.rectangle.width.floor() as u32, self.rectangle.height.floor() as u32).unwrap();
+                    println!("Capturing area screen!");
                 },
-                Mode::Fullscreen => {
+                Selection::Fullscreen => {
                     img = screen.capture().unwrap();
                     println!("Capturing screen!");
                 },
@@ -108,6 +119,7 @@ impl App for AppUtility {
                 ..Default::default()
             })
             .fixed_size([300.0, 50.0])
+            .open(&mut (!self.view_image && !self.selecting_area))
             .show(ctx, |ui| {
                 ui.with_layout(
                     Layout {
@@ -120,13 +132,13 @@ impl App for AppUtility {
                     }, |ui| {
                         if !self.view_image {
                             if ui.button("🖵 Fullscreen shot").clicked() {
-                                self.mode = Mode::Fullscreen;
+                                self.make_action(Action::SelectFullscreen, ctx, frame);
                                 println!("Capture clicked");
                                 self.make_action(Action::Capture, ctx, frame);
                             }
                             if ui.button("⛶ Area shot").clicked() {
-                                self.mode = Mode::Area;
-                                self.make_action(Action::Capture, ctx, frame);
+                                self.make_action(Action::SelectArea, ctx, frame);
+                                println!("You want an area shot?")
                             }
 
                             if ui.button("🔧 SETTINGS").clicked() {}
@@ -187,6 +199,33 @@ impl App for AppUtility {
                 );
                 println!("I'm viewing the image!!");
             });
+
+        let window = Window::new("Select area")
+            .title_bar(false)
+            .default_size(egui::vec2(300.0, 300.0))
+            .resizable(true)
+            .movable(true)
+            .resize(|r| r.max_size(egui::vec2(frame.info().window_info.size[0], frame.info().window_info.size[1])))
+            .resize(|r| r.min_size(egui::vec2(2.0, 2.0)))
+            .frame(egui::Frame { 
+                ..Default::default() 
+            })
+            .open(&mut self.selecting_area)
+            .show(ctx, |ui| {
+                ui.allocate_space(ui.available_size());
+                println!("Am I here?!")
+            });
+
+        if self.selecting_area {
+            println!("Do I need to be here?");
+            let rect = window.unwrap().response.rect;
+            self.rectangle = Rectangle {
+                x: rect.left(),
+                y: rect.top(),
+                width: rect.width(),
+                height: rect.height(),
+            }
+        }
 
     }
 }

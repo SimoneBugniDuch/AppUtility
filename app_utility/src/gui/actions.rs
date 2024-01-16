@@ -5,6 +5,8 @@ pub enum Action {
     Modify,
     NewScreenshot,
     Save,
+    SelectArea,
+    SelectFullscreen,
     Undo,
 }
 
@@ -17,6 +19,8 @@ impl Action {
             Action::Modify => String::from("Modify"),
             Action::NewScreenshot => String::from("NewScreenshot"),
             Action::Save => String::from("Save"),
+            Action::SelectArea => String::from("SelectArea"),
+            Action::SelectFullscreen => String::from("SelectFullscreen"),
             Action::Undo => String::from("Undo"),
         }
     }
