@@ -212,7 +212,7 @@ impl App for AppUtility {
                             .on_hover_text("Open the settings menu")
                             .clicked()
                             {
-                                // Your SETTINGS button logic
+                                self.make_action(Action::Settings, ctx, frame);
                             }
 
                             if circular_button(
