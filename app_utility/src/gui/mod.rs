@@ -155,7 +155,7 @@ impl App for AppUtility {
                 ..Default::default()
             })
             .default_rect(egui::Rect::from_center_size(
-                egui::Pos2::new(frame.info().window_info.size.x / 2.0 - 70.0, 30.0),
+                egui::Pos2::new(frame.info().window_info.size.x / 2.0 - 316.0, 30.0),
                 egui::Vec2::new(316.0, 30.0),
             ))
             .fixed_size([400.0, 50.0])
