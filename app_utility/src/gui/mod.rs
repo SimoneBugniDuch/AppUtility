@@ -357,6 +357,7 @@ impl App for AppUtility {
             })
             .resize(|r| r.min_size(egui::vec2(2.0, 2.0)))
             .frame(egui::Frame {
+                stroke: egui::Stroke { width: 1.0, color: Color32::WHITE },
                 ..Default::default()
             })
             .open(&mut self.selecting_area)
