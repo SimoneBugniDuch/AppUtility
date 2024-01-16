@@ -7,6 +7,7 @@ pub struct NewShortcut {
     key: Option<Key>,
     default: bool,
     action: Option<Action>,
+    description: String,
 }
 
 impl NewShortcut {
@@ -21,27 +22,45 @@ impl NewShortcut {
             },
             key: None,
             default: true,
-            action: None
+            action: None,
+            description: String::new(),
         }
     }
 }
 
 pub struct ShortCut {
     name: String,
+    description: String,
     shortcut: KeyboardShortcut,
     active: bool,
     action: Action,
 }
 
 impl ShortCut {
-    fn new(modifiers: Modifiers, key: Key, action: Action) -> Self {
+    fn new(modifiers: Modifiers, key: Key, description: String, action: Action) -> Self {
         Self {
             name: action.to_string(),
+            description,
             shortcut: KeyboardShortcut { modifiers, key },
             active: true,
             action
         }
     }
+}
 
+pub struct ShortcutVec {
+    set: Vec<ShortCut>,
+    pub show: bool,
+}
 
+impl ShortcutVec {
+    pub fn default() -> Self {
+        let mut set = Vec::new();
+        set.push(ShortCut::new(Modifiers::COMMAND, Key::Z, "Undo".to_string(), Action::Undo));
+        set.push(ShortCut::new(Modifiers::COMMAND, Key::W, "Close the application".to_string(), Action::Close));
+        Self {
+            set,
+            show: false,
+        }
+    }
 }

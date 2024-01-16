@@ -12,7 +12,7 @@ use eframe::{
 };
 use image::{self, imageops::filter3x3, load_from_memory, ImageError};
 
-use self::actions::Action;
+use self::{actions::Action, shortcut::ShortcutVec};
 use self::screenshots::Screenshots;
 use self::shortcut::NewShortcut;
 
@@ -31,6 +31,7 @@ struct AppUtility {
     texture: Option<TextureHandle>,
     selecting_area: bool,
     show_settings: bool,
+    shortcuts: ShortcutVec,
 }
 
 struct Rectangle {
@@ -68,6 +69,7 @@ impl AppUtility {
             view_image: false,
             texture: None,
             show_settings: false,
+            shortcuts: ShortcutVec::default(),
         }
     }
 
@@ -304,18 +306,16 @@ impl App for AppUtility {
 
         Window::new("Window when selecting area")
             .title_bar(false)
-            .movable(false)
             .frame(egui::Frame {
-                fill: Color32::GRAY,
-                stroke: egui::Stroke {
-                    width: 1.5,
-                    color: Color32::BLACK,
-                },
+                fill: egui::Color32::LIGHT_GRAY,
+                stroke: egui::Stroke::new(0.5, egui::Color32::DARK_GRAY),
+                inner_margin: egui::style::Margin::same(15.0),
+                rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
             .default_rect(egui::Rect::from_center_size(
-                egui::Pos2::new(frame.info().window_info.size.x / 2.0 - 316.0, 30.0),
-                egui::Vec2::new(100.0, 50.0),
+                egui::Pos2::new(frame.info().window_info.size.x / 2.0, 30.0),
+                egui::Vec2::new(300.0, 30.0),
             ))
             .resizable(false)
             .open(&mut self.selecting_area.clone())
@@ -330,15 +330,17 @@ impl App for AppUtility {
                         cross_justify: true,
                     },
                     |ui| {
-                        if custom_button(ui, "📷", Color32::BLACK, Color32::GRAY)
-                            .on_hover_text("Capture")
+                        if custom_button(ui, " 📷  Capture  ", Color32::WHITE, Color32::from_rgb(142, 167, 233))
+                            .on_hover_text("Capture the area screenshot!")
                             .clicked()
                         {
                             self.make_action(Action::Capture, ctx, frame);
                         }
+                        
+                        ui.add_space(10.0);
 
-                        if custom_button(ui, "⟲ ", Color32::WHITE, Color32::GRAY)
-                            .on_hover_text("Go back")
+                        if custom_button(ui, " ⟲  HomePage  ", Color32::WHITE, Color32::from_rgb(210, 69, 69))
+                            .on_hover_text("Go back to the homepage")
                             .clicked()
                         {
                             self.make_action(Action::HomePage, ctx, frame);
