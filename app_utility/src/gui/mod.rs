@@ -155,9 +155,6 @@ impl App for AppUtility {
                     }, |ui| {
                         if self.view_image {
                             println!("Now I'm seeing the image");
-                            if ui.button("Close").clicked() {
-                                self.make_action(Action::Close, ctx, frame);
-                            }
                         }
                     })
             });
