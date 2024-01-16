@@ -23,7 +23,7 @@ impl NewShortcut {
             key: None,
             default: true,
             action: None,
-            description: String::new(),
+            description: String::from(""),
         }
     }
 }
