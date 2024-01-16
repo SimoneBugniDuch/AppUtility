@@ -2,7 +2,7 @@ mod actions;
 mod screenshots;
 mod shortcut;
 
-use std::{sync::Arc, time::Duration, array::from_mut};
+use std::{array::from_mut, sync::Arc, time::Duration};
 
 use chrono::Local;
 use eframe::{
@@ -10,7 +10,7 @@ use eframe::{
     epaint::vec2,
     run_native, App, Frame,
 };
-use image::{self, load_from_memory, ImageError, imageops::filter3x3};
+use image::{self, imageops::filter3x3, load_from_memory, ImageError};
 
 use self::actions::Action;
 use self::screenshots::Screenshots;
@@ -30,6 +30,7 @@ struct AppUtility {
     view_image: bool,
     texture: Option<TextureHandle>,
     selecting_area: bool,
+    show_settings: bool,
 }
 
 struct Rectangle {
@@ -66,6 +67,7 @@ impl AppUtility {
             buffer: None,
             view_image: false,
             texture: None,
+            show_settings: false,
         }
     }
 
@@ -95,8 +97,7 @@ impl AppUtility {
                         self.default_number += 1;
                     }
                 }
-                
-            },
+            }
             Action::SelectArea => {
                 self.selection_mode = Selection::Area;
                 self.selecting_area = true;
@@ -107,22 +108,6 @@ impl AppUtility {
             }
             Action::Settings => {
                 self.show_settings = true;
-                if(self.show_settings){
-                egui::Window::new("Settings")
-                    .open(&mut self.show_settings)
-                    .frame(egui::Frame {
-                        fill: egui::Color32::GRAY,
-                        stroke: egui::Stroke::new(0.5, egui::Color32::BLACK),
-                        inner_margin: egui::style::Margin::same(15.0),
-                        rounding: egui::Rounding::same(20.0),
-                        ..Default::default()
-                    })
-                    .movable(true)
-                    .resizable(false)
-                    .show(ctx, |ui| {
-                        ui.label("Settings");
-                    });
-                }
             }
             Action::Undo => {}
         }
@@ -263,12 +248,14 @@ impl App for AppUtility {
                         main_wrap: false,
                         main_justify: false,
                         cross_align: egui::Align::Center,
-                        cross_justify: true
-                    }, |ui| {
+                        cross_justify: true,
+                    },
+                    |ui| {
                         if self.view_image {
                             println!("Now I'm seeing the image");
                         }
-                    })
+                    },
+                )
             });
 
         Window::new("View screenshot")
@@ -312,7 +299,7 @@ impl App for AppUtility {
             .resizable(true)
             .movable(true)
             .default_pos(egui::Pos2::new(
-                (frame.info().window_info.size[0] - 300.0) / 2.0, 
+                (frame.info().window_info.size[0] - 300.0) / 2.0,
                 (frame.info().window_info.size[1] - 300.0) / 2.0,
             ))
             .resize(|r| {
@@ -345,6 +332,23 @@ impl App for AppUtility {
                 height: rect.height() * corr,
             }
         }
+
+        Window::new("Settings")
+            .open(&mut self.show_settings)
+            .frame(egui::Frame {
+                fill: egui::Color32::LIGHT_GRAY,
+                stroke: egui::Stroke::new(0.5, egui::Color32::DARK_GRAY),
+                inner_margin: egui::style::Margin::same(15.0),
+                rounding: egui::Rounding::same(20.0),
+                ..Default::default()
+            })
+            .movable(true)
+            .resizable(false)
+            .show(ctx, |ui| {
+                ui.label("Settings");
+                ui.separator();
+                ui.label("Default path");
+            });
     }
 }
 
