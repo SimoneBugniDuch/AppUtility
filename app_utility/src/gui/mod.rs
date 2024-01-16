@@ -164,7 +164,7 @@ impl App for AppUtility {
                 egui::Vec2::new(316.0, 30.0),
             ))
             .resizable(false)
-            .open(&mut (!self.view_image && !self.selecting_area))
+            .open(&mut (!self.view_image && !self.selecting_area && !self.show_settings))
             .show(ctx, |ui| {
                 ui.with_layout(
                     Layout {
@@ -291,6 +291,51 @@ impl App for AppUtility {
                     Color32::WHITE,
                 );
                 println!("I'm viewing the image!!");
+            });
+
+        Window::new("Window when selecting area")
+            .title_bar(false)
+            .movable(false)
+            .frame(egui::Frame {
+                fill: Color32::GRAY,
+                stroke: egui::Stroke {
+                    width: 1.5,
+                    color: Color32::BLACK,
+                },
+                ..Default::default()
+            })
+            .default_rect(egui::Rect::from_center_size(
+                egui::Pos2::new(frame.info().window_info.size.x / 2.0 - 316.0, 30.0),
+                egui::Vec2::new(100.0, 50.0),
+            ))
+            .resizable(false)
+            .open(&mut self.selecting_area.clone())
+            .show(ctx, |ui| {
+                ui.with_layout(
+                    Layout {
+                        main_dir: egui::Direction::LeftToRight,
+                        main_align: egui::Align::Center,
+                        main_wrap: false,
+                        main_justify: false,
+                        cross_align: egui::Align::Center,
+                        cross_justify: true,
+                    },
+                    |ui| {
+                        if custom_button(ui, "📷", Color32::BLACK, Color32::GRAY)
+                            .on_hover_text("Capture!")
+                            .clicked()
+                        {
+                            self.make_action(Action::Capture, ctx, frame);
+                        }
+
+                        if custom_button(ui, "⟲ ", Color32::WHITE, Color32::GRAY)
+                            .on_hover_text("Go back")
+                            .clicked()
+                        {
+                            self.make_action(Action::HomePage, ctx, frame);
+                        }
+                    },
+                )
             });
 
         let window = Window::new("Select area")
