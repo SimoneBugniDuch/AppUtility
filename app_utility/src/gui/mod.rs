@@ -17,6 +17,8 @@ struct AppUtility {
     default_path: String,
     new_shortcut: NewShortcut,
     default_name: String,
+    default_name_selected: bool,
+    default_name_number: usize,
     hide: bool,
     selection_mode: Selection,
     screenshots: Screenshots,
@@ -46,6 +48,8 @@ impl AppUtility {
             default_path: "screenshot".to_string(),
             new_shortcut: NewShortcut::default(),
             default_name: build_default_name(),
+            default_name_selected: true,
+            default_name_number: 0,
             hide: false,
             selection_mode: Selection::Fullscreen,
             selecting_area: false,
@@ -69,7 +73,9 @@ impl AppUtility {
             Action::Copy => {},
             Action::Modify => {},
             Action::NewScreenshot => {},
-            Action::Save => {},
+            Action::Save => {
+                let mut filename = build_default_name();
+            },
             Action::SelectArea => {
                 self.selection_mode = Selection::Area;
                 self.selecting_area = true;
@@ -147,29 +153,29 @@ impl App for AppUtility {
                 )
             });
 
-        Window::new("Screenshot taken")
-            .title_bar(false)
-            .open(&mut self.view_image.clone())
-            .frame(egui::Frame {
-                ..Default::default()
-            })
-            .fixed_size([600.0, 50.0])
-            .resizable(false)
-            .show(ctx, |ui| {
-                ui.with_layout(
-                    Layout {
-                        main_dir: egui::Direction::LeftToRight,
-                        main_align: egui::Align::Center,
-                        main_wrap: false,
-                        main_justify: false,
-                        cross_align: egui::Align::Center,
-                        cross_justify: true
-                    }, |ui| {
-                        if self.view_image {
-                            println!("Now I'm seeing the image");
-                        }
-                    })
-            });
+        // Window::new("Screenshot taken")
+        //     .title_bar(false)
+        //     .open(&mut self.view_image.clone())
+        //     .frame(egui::Frame {
+        //         ..Default::default()
+        //     })
+        //     .fixed_size([600.0, 50.0])
+        //     .resizable(false)
+        //     .show(ctx, |ui| {
+        //         ui.with_layout(
+        //             Layout {
+        //                 main_dir: egui::Direction::LeftToRight,
+        //                 main_align: egui::Align::Center,
+        //                 main_wrap: false,
+        //                 main_justify: false,
+        //                 cross_align: egui::Align::Center,
+        //                 cross_justify: true
+        //             }, |ui| {
+        //                 if self.view_image {
+        //                     println!("Now I'm seeing the image");
+        //                 }
+        //             })
+        //     });
 
         Window::new("View screenshot")
             .title_bar(false)
@@ -207,23 +213,32 @@ impl App for AppUtility {
             .movable(true)
             .resize(|r| r.max_size(egui::vec2(frame.info().window_info.size[0], frame.info().window_info.size[1])))
             .resize(|r| r.min_size(egui::vec2(2.0, 2.0)))
-            .frame(egui::Frame { 
+            .default_pos(egui::Pos2::new(
+                (frame.info().window_info.size[0] - 300.0) / 2.0,
+                (frame.info().window_info.size[1] - 300.0) / 2.0,
+            ))
+            .frame(egui::Frame {
+                stroke: egui::Stroke { width: 1.0, color: Color32::WHITE },
                 ..Default::default() 
             })
             .open(&mut self.selecting_area)
             .show(ctx, |ui| {
                 ui.allocate_space(ui.available_size());
-                println!("Am I here?!")
+                println!("Am I here?!");
             });
 
         if self.selecting_area {
             println!("Do I need to be here?");
             let rect = window.unwrap().response.rect;
+            let mut corr = 1.0 ;
+            if cfg!(target_os = "windows") {
+                corr = frame.info().native_pixels_per_point.unwrap();
+            }
             self.rectangle = Rectangle {
-                x: rect.left(),
-                y: rect.top(),
-                width: rect.width(),
-                height: rect.height(),
+                x: rect.left() * corr,
+                y: rect.top() * corr,
+                width: rect.width() * corr,
+                height: rect.height() * corr,
             }
         }
 
@@ -232,13 +247,22 @@ impl App for AppUtility {
 
 pub fn window() -> eframe::Result<()> {
     // Set the main window configuration options
-    let options = NativeOptions {
+    // let options = NativeOptions {
+    //     maximized: true,
+    //     resizable: false,
+    //     follow_system_theme: false,
+    //     default_theme: eframe::Theme::Light,
+    //     transparent: true,
+    //     run_and_return: false, // Determines app behavior when main window is closed
+    //     centered: true,        // Center the window on startup
+    //     ..Default::default()
+    // };
+
+    let options = eframe::NativeOptions {
         maximized: true,
-        initial_window_size: Some(egui::Vec2::new(600.0, 300.0)),
-        follow_system_theme: false,
-        default_theme: eframe::Theme::Light,
-        run_and_return: false, // Determines app behavior when main window is closed
-        centered: true,        // Center the window on startup
+        decorated: false,
+        transparent: false,
+        resizable: false,
         ..Default::default()
     };
 
