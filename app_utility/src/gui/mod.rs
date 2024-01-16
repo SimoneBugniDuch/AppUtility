@@ -21,6 +21,8 @@ struct AppUtility {
     default_path: String,
     new_shortcut: NewShortcut,
     default_name: String,
+    default_name_selected: bool,
+    default_name_number: usize,
     hide: bool,
     selection_mode: Selection,
     screenshots: Screenshots,
@@ -55,6 +57,8 @@ impl AppUtility {
             default_path: "screenshot".to_string(),
             new_shortcut: NewShortcut::default(),
             default_name: build_default_name(),
+            default_name_selected: true,
+            default_name_number: 0,
             hide: false,
             selection_mode: Selection::Fullscreen,
             selecting_area: false,
@@ -78,7 +82,9 @@ impl AppUtility {
             Action::Copy => {}
             Action::Modify => {}
             Action::NewScreenshot => {}
-            Action::Save => {}
+            Action::Save => {
+                let mut filename = build_default_name();
+            }
             Action::SelectArea => {
                 self.selection_mode = Selection::Area;
                 self.selecting_area = true;
@@ -227,14 +233,12 @@ impl App for AppUtility {
                         main_wrap: false,
                         main_justify: false,
                         cross_align: egui::Align::Center,
-                        cross_justify: true,
-                    },
-                    |ui| {
+                        cross_justify: true
+                    }, |ui| {
                         if self.view_image {
                             println!("Now I'm seeing the image");
                         }
-                    },
-                )
+                    })
             });
 
         Window::new("View screenshot")
@@ -282,23 +286,27 @@ impl App for AppUtility {
                 ))
             })
             .resize(|r| r.min_size(egui::vec2(2.0, 2.0)))
-            .frame(egui::Frame {
-                ..Default::default()
+            .frame(egui::Frame { 
+                ..Default::default() 
             })
             .open(&mut self.selecting_area)
             .show(ctx, |ui| {
                 ui.allocate_space(ui.available_size());
-                println!("Am I here?!")
+                println!("Am I here?!");
             });
 
         if self.selecting_area {
             println!("Do I need to be here?");
             let rect = window.unwrap().response.rect;
+            let mut corr = 1.0 ;
+            if cfg!(target_os = "windows") {
+                corr = frame.info().native_pixels_per_point.unwrap();
+            }
             self.rectangle = Rectangle {
-                x: rect.left(),
-                y: rect.top(),
-                width: rect.width(),
-                height: rect.height(),
+                x: rect.left() * corr,
+                y: rect.top() * corr,
+                width: rect.width() * corr,
+                height: rect.height() * corr,
             }
         }
     }
