@@ -98,7 +98,7 @@ impl App for AppUtility {
             ));
             self.hide = false;
             self.view_image = true;
-            frame.set_visible(false);
+            frame.set_visible(true);
         }
 
         Window::new("New screenshot")
