@@ -30,7 +30,6 @@ struct AppUtility {
     view_image: bool,
     texture: Option<TextureHandle>,
     selecting_area: bool,
-    show_settings: bool,
 }
 
 struct Rectangle {
@@ -67,7 +66,6 @@ impl AppUtility {
             buffer: None,
             view_image: false,
             texture: None,
-            show_settings: false,
         }
     }
 
@@ -98,7 +96,8 @@ impl AppUtility {
                         self.default_number += 1;
                     }
                 }
-            }
+                
+            },
             Action::SelectArea => {
                 self.selection_mode = Selection::Area;
                 self.selecting_area = true;
@@ -213,7 +212,7 @@ impl App for AppUtility {
                             .on_hover_text("Open the settings menu")
                             .clicked()
                             {
-                                self.make_action(Action::Settings, ctx, frame)
+                                // Your SETTINGS button logic
                             }
 
                             if circular_button(
@@ -249,14 +248,12 @@ impl App for AppUtility {
                         main_wrap: false,
                         main_justify: false,
                         cross_align: egui::Align::Center,
-                        cross_justify: true,
-                    },
-                    |ui| {
+                        cross_justify: true
+                    }, |ui| {
                         if self.view_image {
                             println!("Now I'm seeing the image");
                         }
-                    },
-                )
+                    })
             });
 
         Window::new("View screenshot")
@@ -311,76 +308,28 @@ impl App for AppUtility {
             })
             .resize(|r| r.min_size(egui::vec2(2.0, 2.0)))
             .frame(egui::Frame {
-                stroke: egui::Stroke::new(1.0, Color32::WHITE),
-                ..Default::default() 
+                ..Default::default()
             })
             .open(&mut self.selecting_area)
             .show(ctx, |ui| {
                 ui.allocate_space(ui.available_size());
                 println!("Am I here?!");
             });
-        
-        Window::new("Window when selecting area")
-            .title_bar(false)
-            .movable(false)
-            .frame(egui::Frame {
-                fill: Color32::GRAY,
-                stroke: egui::Stroke { width: 1.5, color: Color32::BLACK },
-                ..Default::default()
-             })
-             .default_rect(egui::Rect::from_center_size(
-                egui::Pos2::new(frame.info().window_info.size.x / 2.0 - 316.0, 30.0),
-                egui::Vec2::new(100.0, 50.0),
-            ))
-            .resizable(false)
-            .open(&mut self.selecting_area.clone())
-            .show(ctx, |ui| {
-                ui.with_layout(
-                    Layout {
-                        main_dir: egui::Direction::LeftToRight,
-                        main_align: egui::Align::Center,
-                        main_wrap: false,
-                        main_justify: false,
-                        cross_align: egui::Align::Center,
-                        cross_justify: true
-                    }, |ui| {
-                        if custom_button(
-                            ui, 
-                            "📷  capture", 
-                            Color32::BLACK, 
-                            Color32::GRAY,
-                        )
-                        .on_hover_text("Capture!")
-                        .clicked() {
-                            self.make_action(Action::Capture, ctx, frame);
-                        }
 
-                        if custom_button(
-                            ui, 
-                            "⟲ Back", 
-                            Color32::WHITE, 
-                            Color32::GRAY)
-                        .on_hover_text("Go back to the previous page")
-                        .clicked() {
-                            self.make_action(Action::HomePage, ctx, frame);
-                        }
-                    })
-            });
-
-        // if self.selecting_area {
-        //     println!("Do I need to be here?");
-        //     let rect = window.unwrap().response.rect;
-        //     let mut corr = 1.0 ;
-        //     if cfg!(target_os = "windows") {
-        //         corr = frame.info().native_pixels_per_point.unwrap();
-        //     }
-        //     self.rectangle = Rectangle {
-        //         x: rect.left() * corr,
-        //         y: rect.top() * corr,
-        //         width: rect.width() * corr,
-        //         height: rect.height() * corr,
-        //     }
-        // }
+        if self.selecting_area {
+            println!("Do I need to be here?");
+            let rect = window.unwrap().response.rect;
+            let mut corr = 1.0;
+            if cfg!(target_os = "windows") {
+                corr = frame.info().native_pixels_per_point.unwrap();
+            }
+            self.rectangle = Rectangle {
+                x: rect.left() * corr,
+                y: rect.top() * corr,
+                width: rect.width() * corr,
+                height: rect.height() * corr,
+            }
+        }
     }
 }
 
