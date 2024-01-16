@@ -8,8 +8,8 @@ pub enum Action {
     Save,
     SelectArea,
     SelectFullscreen,
-    Undo,
     Settings,
+    Undo,
 }
 
 impl Action {
@@ -24,8 +24,8 @@ impl Action {
             Action::Save => String::from("Save"),
             Action::SelectArea => String::from("SelectArea"),
             Action::SelectFullscreen => String::from("SelectFullscreen"),
-            Action::Undo => String::from("Undo"),
             Action::Settings => String::from("Settings"),
+            Action::Undo => String::from("Undo"),
         }
     }
 }
