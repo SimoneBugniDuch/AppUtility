@@ -18,7 +18,7 @@ struct AppUtility {
     new_shortcut: NewShortcut,
     default_name: String,
     default_name_selected: bool,
-    default_name_number: usize,
+    default_number: usize,
     hide: bool,
     selection_mode: Selection,
     screenshots: Screenshots,
@@ -49,7 +49,7 @@ impl AppUtility {
             new_shortcut: NewShortcut::default(),
             default_name: build_default_name(),
             default_name_selected: true,
-            default_name_number: 0,
+            default_number: 0,
             hide: false,
             selection_mode: Selection::Fullscreen,
             selecting_area: false,
@@ -75,6 +75,16 @@ impl AppUtility {
             Action::NewScreenshot => {},
             Action::Save => {
                 let mut filename = build_default_name();
+                if !self.default_name_selected {
+                    if self.default_number != 0 {
+                        filename = format!("{}_{}", self.default_name, self.default_number);
+                        self.default_number += 1;
+                    } else {
+                        filename = self.default_name.clone();
+                        self.default_number += 1;
+                    }
+                }
+                
             },
             Action::SelectArea => {
                 self.selection_mode = Selection::Area;
@@ -156,7 +166,7 @@ impl App for AppUtility {
                             }
 
                             if ui.button("🔧 SETTINGS").clicked() {}
-                            if ui.button(" x ").clicked() {
+                            if ui.button(" X ").clicked() {
                                 self.make_action(Action::Close, ctx, frame);
                             }
                         }
@@ -170,8 +180,7 @@ impl App for AppUtility {
         //     .frame(egui::Frame {
         //         ..Default::default()
         //     })
-        //     .fixed_size([600.0, 50.0])
-        //     .resizable(false)
+        //     .resizable(true)
         //     .show(ctx, |ui| {
         //         ui.with_layout(
         //             Layout {
@@ -188,34 +197,40 @@ impl App for AppUtility {
         //             })
         //     });
 
-        Window::new("View screenshot")
-            .title_bar(false)
-            .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
-            .frame(egui::Frame {
-                ..Default::default()
-            })
-            .fixed_size([1200.0, 600.0])
-            .resizable(false)
-            .open(&mut self.view_image)
-            .show(ctx, |ui| {
-                let dim_img = resize_to_fit_container(
-                    frame.info().window_info.size.x, 
-                    frame.info().window_info.size.y, 
-                    self.texture.clone().unwrap().size_vec2()[0],
-                self.texture.clone().unwrap().size_vec2()[1]);
-                let (mut response, painter) = ui.allocate_painter(vec2(dim_img.0, dim_img.1), Sense::drag());
-                painter.image(
-                    self.texture.clone().unwrap().id(), 
-                    egui::Rect::from_center_size(egui::Pos2::new(
-                        (frame.info().window_info.size[0]) / 2.0, (frame.info().window_info.size[1]) / 2.0), 
-                        egui::Vec2::new(dim_img.0, dim_img.1
-                        ),
-                    ), 
-                    egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
-                    Color32::WHITE,
-                );
-                println!("I'm viewing the image!!");
-            });
+        // Window::new("View screenshot")
+        //     .title_bar(false)
+        //     .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+        //     // .frame(egui::Frame {
+        //     //     fill: egui::Color32::GRAY,
+        //     //     stroke: egui::Stroke::new(0.5, egui::Color32::BLACK),
+        //     //     inner_margin: egui::style::Margin::same(15.0),
+        //     //     rounding: egui::Rounding::same(20.0),
+        //     //     ..Default::default()
+        //     // })
+        //     .resizable(true)
+        //     .resize(|r| r.max_size(egui::vec2(frame.info().window_info.size[0] / 2.0 * 3.0, frame.info().window_info.size[1] / 2.0 * 3.0)))
+        //     .resize(|r| r.min_size(egui::vec2(2.0, 2.0)))
+        //     .open(&mut self.view_image)
+        //     .show(ctx, |ui| {
+        //         let dim_img = resize_to_fit_container(
+        //             frame.info().window_info.size.x / 3.0 * 2.0,
+        //             frame.info().window_info.size.y / 3.0 * 2.0,
+        //             self.texture.clone().unwrap().size_vec2()[0],
+        //             self.texture.clone().unwrap().size_vec2()[1],
+        //         );
+        //         let (mut response, painter) = ui.allocate_painter(vec2(dim_img.0, dim_img.1), Sense::drag());
+        //         // painter.image(
+        //         //     self.texture.clone().unwrap().id(), 
+        //         //     egui::Rect::from_center_size(egui::Pos2::new(
+        //         //         (frame.info().window_info.size[0]) / 2.0, (frame.info().window_info.size[1]) / 2.0), 
+        //         //         egui::Vec2::new(dim_img.0, dim_img.1
+        //         //         ),
+        //         //     ),
+        //         //     egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+        //         //     Color32::WHITE,
+        //         // );
+        //         println!("I'm viewing the image!!");
+        //     });
 
         let window = Window::new("Select area")
             .title_bar(false)
