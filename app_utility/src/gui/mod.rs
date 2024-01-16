@@ -30,6 +30,7 @@ struct AppUtility {
     view_image: bool,
     texture: Option<TextureHandle>,
     selecting_area: bool,
+    show_settings: bool,
 }
 
 struct Rectangle {
@@ -66,6 +67,7 @@ impl AppUtility {
             buffer: None,
             view_image: false,
             texture: None,
+            show_settings: false,
         }
     }
 
@@ -96,8 +98,7 @@ impl AppUtility {
                         self.default_number += 1;
                     }
                 }
-                
-            },
+            }
             Action::SelectArea => {
                 self.selection_mode = Selection::Area;
                 self.selecting_area = true;
@@ -105,6 +106,25 @@ impl AppUtility {
             Action::SelectFullscreen => {
                 self.selection_mode = Selection::Fullscreen;
                 self.selecting_area = false;
+            }
+            Action::Settings => {
+                self.show_settings = true;
+                if(self.show_settings){
+                egui::Window::new("Settings")
+                    .open(&mut self.show_settings)
+                    .frame(egui::Frame {
+                        fill: egui::Color32::GRAY,
+                        stroke: egui::Stroke::new(0.5, egui::Color32::BLACK),
+                        inner_margin: egui::style::Margin::same(15.0),
+                        rounding: egui::Rounding::same(20.0),
+                        ..Default::default()
+                    })
+                    .movable(true)
+                    .resizable(false)
+                    .show(ctx, |ui| {
+                        ui.label("Settings");
+                    });
+                }
             }
             Action::Undo => {}
         }
@@ -176,9 +196,9 @@ impl App for AppUtility {
                         if !self.view_image {
                             if custom_button(
                                 ui,
-                                "🖵 Fullscreen shot",
-                                egui::Color32::BLACK,
-                                egui::Color32::LIGHT_BLUE,
+                                "📷  Fullscreen shot",
+                                egui::Color32::WHITE,
+                                egui::Color32::from_rgb(114, 134, 211),
                             )
                             .on_hover_text("Take a screenshot of the entire screen")
                             .clicked()
@@ -189,9 +209,9 @@ impl App for AppUtility {
                             }
                             if custom_button(
                                 ui,
-                                "⛶ Area shot",
+                                "⛶  Area shot",
                                 egui::Color32::WHITE,
-                                egui::Color32::GREEN,
+                                egui::Color32::from_rgb(142, 167, 233),
                             )
                             .on_hover_text("Take a screenshot of an area")
                             .clicked()
@@ -202,21 +222,21 @@ impl App for AppUtility {
 
                             if custom_button(
                                 ui,
-                                "🔧 SETTINGS",
-                                egui::Color32::WHITE,
-                                egui::Color32::RED,
+                                "🔧  SETTINGS",
+                                egui::Color32::DARK_GRAY,
+                                egui::Color32::from_rgb(229, 224, 255),
                             )
                             .on_hover_text("Open the settings menu")
                             .clicked()
                             {
-                                // Your SETTINGS button logic
+                                self.make_action(Action::Settings, ctx, frame)
                             }
 
                             if circular_button(
                                 ui,
                                 " x ",
                                 egui::Color32::WHITE,
-                                egui::Color32::RED,
+                                egui::Color32::from_rgb(210, 69, 69),
                                 20.0,
                             )
                             .on_hover_text("Close the app")
@@ -245,12 +265,14 @@ impl App for AppUtility {
                         main_wrap: false,
                         main_justify: false,
                         cross_align: egui::Align::Center,
-                        cross_justify: true
-                    }, |ui| {
+                        cross_justify: true,
+                    },
+                    |ui| {
                         if self.view_image {
                             println!("Now I'm seeing the image");
                         }
-                    })
+                    },
+                )
             });
 
         Window::new("View screenshot")
