@@ -5,7 +5,7 @@ mod shortcut;
 use std::time::Duration;
 
 use chrono::Local;
-use eframe::{egui::{self, Color32, Visuals, Window, Layout, TextureHandle, Sense}, Frame, run_native, App, NativeOptions, epaint::vec2};
+use eframe::{egui::{self, Color32, Visuals, Window, Layout, TextureHandle, Sense}, Frame, run_native, App, epaint::vec2};
 use image::{self, load_from_memory, ImageError};
 
 use self::actions::Action;
@@ -112,13 +112,21 @@ impl App for AppUtility {
             frame.set_visible(true);
         }
 
-        Window::new("New screenshot")
+        Window::new("menu bar")
             .title_bar(false)
             .movable(!self.view_image)
             .frame(egui::Frame {
+                fill: egui::Color32::GRAY,
+                stroke: egui::Stroke::new(0.5, egui::Color32::BLACK),
+                inner_margin: egui::style::Margin::same(15.0),
+                rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .fixed_size([300.0, 50.0])
+            .default_rect(egui::Rect::from_center_size(
+                egui::Pos2::new(frame.info().window_info.size.x / 2.0, 10.0),
+                egui::Vec2::new(316.0, 30.0),
+            ))
+            .fixed_size([400.0, 50.0])
             .open(&mut (!self.view_image && !self.selecting_area))
             .show(ctx, |ui| {
                 ui.with_layout(
@@ -142,6 +150,9 @@ impl App for AppUtility {
                             }
 
                             if ui.button("🔧 SETTINGS").clicked() {}
+                            if ui.button(" x ").clicked() {
+                                self.make_action(Action::Close, ctx, frame);
+                            }
                         }
                     }
                 )
@@ -232,13 +243,11 @@ impl App for AppUtility {
 
 pub fn window() -> eframe::Result<()> {
     // Set the main window configuration options
-    let options = NativeOptions {
+    let options = eframe::NativeOptions {
         maximized: true,
-        initial_window_size: Some(egui::Vec2::new(600.0, 300.0)),
-        follow_system_theme: false,
-        default_theme: eframe::Theme::Light,
-        run_and_return: false, // Determines app behavior when main window is closed
-        centered: true,        // Center the window on startup
+        decorated: false,
+        transparent: true,
+        resizable: false,
         ..Default::default()
     };
 
