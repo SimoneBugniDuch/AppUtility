@@ -174,9 +174,9 @@ impl App for AppUtility {
                         if !self.view_image {
                             if custom_button(
                                 ui,
-                                "🖵 Fullscreen shot",
-                                egui::Color32::BLACK,
-                                egui::Color32::LIGHT_BLUE,
+                                "📷  Fullscreen shot",
+                                egui::Color32::WHITE,
+                                egui::Color32::from_rgb(114, 134, 211),
                             )
                             .on_hover_text("Take a screenshot of the entire screen")
                             .clicked()
@@ -187,9 +187,9 @@ impl App for AppUtility {
                             }
                             if custom_button(
                                 ui,
-                                "⛶ Area shot",
+                                "⛶  Area shot",
                                 egui::Color32::WHITE,
-                                egui::Color32::GREEN,
+                                egui::Color32::from_rgb(142, 167, 233),
                             )
                             .on_hover_text("Take a screenshot of an area")
                             .clicked()
@@ -200,9 +200,9 @@ impl App for AppUtility {
 
                             if custom_button(
                                 ui,
-                                "🔧 SETTINGS",
-                                egui::Color32::WHITE,
-                                egui::Color32::RED,
+                                "🔧  SETTINGS",
+                                egui::Color32::DARK_GRAY,
+                                egui::Color32::from_rgb(229, 224, 255),
                             )
                             .on_hover_text("window that contains the settings")
                             .clicked()
@@ -214,7 +214,7 @@ impl App for AppUtility {
                                 ui,
                                 " x ",
                                 egui::Color32::WHITE,
-                                egui::Color32::RED,
+                                egui::Color32::from_rgb(210, 69, 69),
                                 20.0,
                             )
                             .on_hover_text("Close the app")
