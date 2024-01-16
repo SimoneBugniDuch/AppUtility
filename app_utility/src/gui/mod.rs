@@ -106,22 +106,6 @@ impl AppUtility {
             }
             Action::Settings => {
                 self.show_settings = true;
-                if(self.show_settings){
-                egui::Window::new("Settings")
-                    .open(&mut self.show_settings)
-                    .frame(egui::Frame {
-                        fill: egui::Color32::GRAY,
-                        stroke: egui::Stroke::new(0.5, egui::Color32::BLACK),
-                        inner_margin: egui::style::Margin::same(15.0),
-                        rounding: egui::Rounding::same(20.0),
-                        ..Default::default()
-                    })
-                    .movable(true)
-                    .resizable(false)
-                    .show(ctx, |ui| {
-                        ui.label("Settings");
-                    });
-                }
             }
             Action::Undo => {}
         }
@@ -341,6 +325,26 @@ impl App for AppUtility {
                 height: rect.height() * corr,
             }
         }
+
+        if self.show_settings {
+            egui::Window::new("Settings")
+                .open(&mut self.show_settings)
+                .frame(egui::Frame {
+                    fill: egui::Color32::LIGHT_GRAY,
+                    stroke: egui::Stroke::new(0.5, egui::Color32::DARK_GRAY),
+                    inner_margin: egui::style::Margin::same(15.0),
+                    rounding: egui::Rounding::same(20.0),
+                    ..Default::default()
+                })
+                .movable(true)
+                .resizable(false)
+                .show(ctx, |ui| {
+                    ui.label("Settings");
+                    ui.separator();
+                    ui.label("Default path");
+                    
+                });
+        }
     }
 }
 
@@ -356,7 +360,7 @@ fn custom_button(
     // Set the desired button padding
     // let padding = egui::vec2(30.0, 10.0);
 
-    let font_size = 20.0;
+    let font_size = 16.0;
     // Create a RichText with the desired text color, bold style, and font size
     let rich_text = egui::RichText::new(text)
         .color(text_color)
