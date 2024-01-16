@@ -147,6 +147,7 @@ impl App for AppUtility {
             ));
             self.hide = false;
             self.view_image = true;
+            self.selecting_area = false;
             frame.set_visible(true);
         }
 
@@ -233,9 +234,14 @@ impl App for AppUtility {
             });
 
         Window::new("Screenshot taken")
+        //TODO: QUI BISOGNA INSERIRE I BOTTONI DI MODIFICA, DI COPIA ECC...
             .title_bar(false)
             .open(&mut self.view_image.clone())
             .frame(egui::Frame {
+                fill: egui::Color32::GRAY,
+                stroke: egui::Stroke::new(0.5, egui::Color32::BLACK),
+                inner_margin: egui::style::Margin::same(15.0),
+                rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
             .fixed_size([600.0, 50.0])
@@ -253,6 +259,9 @@ impl App for AppUtility {
                     |ui| {
                         if self.view_image {
                             println!("Now I'm seeing the image");
+                            if custom_button(ui, "Modify", Color32::BLACK, Color32::GRAY).clicked() {
+                                self.make_action(Action::Modify, ctx, frame);
+                            }
                         }
                     },
                 )
@@ -322,7 +331,7 @@ impl App for AppUtility {
                     },
                     |ui| {
                         if custom_button(ui, "📷", Color32::BLACK, Color32::GRAY)
-                            .on_hover_text("Capture!")
+                            .on_hover_text("Capture")
                             .clicked()
                         {
                             self.make_action(Action::Capture, ctx, frame);
