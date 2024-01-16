@@ -12,9 +12,9 @@ use eframe::{
 };
 use image::{self, imageops::filter3x3, load_from_memory, ImageError};
 
-use self::{actions::Action, shortcut::ShortcutVec};
 use self::screenshots::Screenshots;
 use self::shortcut::NewShortcut;
+use self::{actions::Action, shortcut::ShortcutVec};
 
 struct AppUtility {
     rectangle: Rectangle,
@@ -195,10 +195,8 @@ impl App for AppUtility {
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .default_rect(egui::Rect::from_center_size(
-                egui::Pos2::new(frame.info().window_info.size.x / 2.0 - 316.0, 30.0),
-                egui::Vec2::new(316.0, 30.0),
-            ))
+            .anchor(egui::Align2::CENTER_TOP, [0.0, 30.0]) // Center the window
+            .default_size(egui::vec2(320.0, 50.0))
             .resizable(false)
             .open(&mut (!self.view_image && !self.selecting_area && !self.show_settings))
             .show(ctx, |ui| {
@@ -382,18 +380,28 @@ impl App for AppUtility {
                         cross_justify: true,
                     },
                     |ui| {
-                        if custom_button(ui, " 📷  Capture  ", Color32::WHITE, Color32::from_rgb(142, 167, 233))
-                            .on_hover_text("Capture the area screenshot!")
-                            .clicked()
+                        if custom_button(
+                            ui,
+                            " 📷  Capture  ",
+                            Color32::WHITE,
+                            Color32::from_rgb(142, 167, 233),
+                        )
+                        .on_hover_text("Capture the area screenshot!")
+                        .clicked()
                         {
                             self.make_action(Action::Capture, ctx, frame);
                         }
-                        
+
                         ui.add_space(10.0);
 
-                        if custom_button(ui, " ⟲  HomePage  ", Color32::WHITE, Color32::from_rgb(210, 69, 69))
-                            .on_hover_text("Go back to the homepage")
-                            .clicked()
+                        if custom_button(
+                            ui,
+                            " ⟲  HomePage  ",
+                            Color32::WHITE,
+                            Color32::from_rgb(210, 69, 69),
+                        )
+                        .on_hover_text("Go back to the homepage")
+                        .clicked()
                         {
                             self.make_action(Action::HomePage, ctx, frame);
                         }
@@ -418,7 +426,10 @@ impl App for AppUtility {
             })
             .resize(|r| r.min_size(egui::vec2(2.0, 2.0)))
             .frame(egui::Frame {
-                stroke: egui::Stroke { width: 1.0, color: Color32::WHITE },
+                stroke: egui::Stroke {
+                    width: 1.0,
+                    color: Color32::WHITE,
+                },
                 ..Default::default()
             })
             .open(&mut self.selecting_area)
@@ -451,39 +462,103 @@ impl App for AppUtility {
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
+            .anchor(egui::Align2::CENTER_TOP, [0.0, 100.0]) // Center the window
             .movable(true)
             .resizable(false)
             .show(ctx, |ui| {
-                ui.label("Settings");
+                ui.add_space(20.0);
+                ui.heading("Shortcuts settings: ");
                 ui.separator();
-                ui.label("Default path");
+                ui.add_space(10.0);
+                egui::Grid::new("shortcut_grid")
+                    .spacing([170.0, 5.0])
+                    .striped(true)
+                    .show(ui, |ui| {
+                        ui.label("Shortcut Name");
+                        ui.label("Description");
+                        ui.label("Keyboard combination");
+                        ui.end_row();
+
+                        for shortcut in &mut self.shortcuts.set {
+                            let shortcut::ShortCut {
+                                name,
+                                description,
+                                shortcut,
+                                ..
+                            } = shortcut;
+
+                            // Calculate width based on text length plus padding
+                            let name_width = 100.0;
+                            let description_width = 300.0;
+
+                            ui.add_sized([name_width, 0.0], egui::TextEdit::singleline(name));
+                            ui.add_sized(
+                                [description_width, 0.0],
+                                egui::TextEdit::singleline(description),
+                            );
+                            ui.add_sized(
+                                [name_width, 0.0],
+                                egui::TextEdit::singleline(&mut ctx.format_shortcut(shortcut)),
+                            );
+
+                            ui.end_row();
+                        }
+                    });
+
+                // Buttons for saving and discarding changes
+                ui.add_space(20.0);
+                ui.horizontal(|ui| {
+                    
+                    if custom_button_with_font_size(
+                        ui,
+                        "Save all changes",
+                        egui::Color32::DARK_GRAY,
+                        egui::Color32::from_rgb(229, 224, 255),
+                        10.0,
+                    )
+                    .clicked()
+                    {
+                        // Implement logic to discard changes and revert to original shortcuts
+                    }
+                    ui.add_space(10.0);
+                    if custom_button_with_font_size(
+                        ui,
+                        " Discard all changes",
+                        egui::Color32::DARK_GRAY,
+                        egui::Color32::from_rgb(229, 224, 255),
+                        10.0,
+                    )
+                    .clicked()
+                    {
+                        // Implement logic to discard changes and revert to original shortcuts
+                    }
+                });
+                // End of shortcuts settings window
             });
     }
 }
 
-fn custom_button(
+// Version with font_size
+fn custom_button_with_font_size(
     ui: &mut egui::Ui,
     text: &str,
     text_color: Color32,
     bg_color: Color32,
+    font_size: f32,
 ) -> egui::Response {
     // Store the previous button style
     let previous_button_padding = ui.style().spacing.button_padding;
 
-    // Set the desired button padding
-    // let padding = egui::vec2(30.0, 10.0);
-
-    let font_size = 20.0;
     // Create a RichText with the desired text color, bold style, and font size
     let rich_text = egui::RichText::new(text)
         .color(text_color)
-        .size(font_size) // Set the font size
+        .size(font_size)
         .strong();
 
     let button_size = egui::vec2(text.len() as f32 * 10.0, font_size);
 
     // Create and add the button to the UI
-    let button = egui::Button::new(rich_text).fill(bg_color).rounding(10.0); // Set the rounding for corners
+    let button = egui::Button::new(rich_text).fill(bg_color).rounding(10.0);
 
     let response = ui.add_sized(button_size, button);
 
@@ -491,6 +566,16 @@ fn custom_button(
     ui.style_mut().spacing.button_padding = previous_button_padding;
 
     response
+}
+
+// Version without font_size
+fn custom_button(
+    ui: &mut egui::Ui,
+    text: &str,
+    text_color: Color32,
+    bg_color: Color32,
+) -> egui::Response {
+    custom_button_with_font_size(ui, text, text_color, bg_color, 20.0)
 }
 
 fn circular_button(
