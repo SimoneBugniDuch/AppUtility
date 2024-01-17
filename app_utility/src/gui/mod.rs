@@ -856,7 +856,7 @@ impl App for AppUtility {
             .resizable(true)
             .movable(true)
             .default_pos(egui::Pos2::new(
-                (frame.info().window_info.size[0] - 300.0) / 2.0,
+                (frame.info().window_info.size[0] - 500.0) / 2.0,
                 (frame.info().window_info.size[1] - 300.0) / 2.0,
             ))
             .resize(|r| {
