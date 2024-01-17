@@ -641,7 +641,7 @@ impl App for AppUtility {
                             );
                             ui.add_sized(
                                 [name_width, 0.0],
-                                egui::TextEdit::singleline(&mut ctx.format_shortcut(shortcut)),
+                                egui::TextEdit::singleline(&mut ctx.format_shortcut(&shortcut)),
                             );
 
                             ui.end_row();
