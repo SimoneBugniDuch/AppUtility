@@ -13,8 +13,6 @@ use eframe::{
     run_native, App, Frame,
 };
 use image::{self, load_from_memory, ImageError};
-use native_dialog::FileDialog;
-use std::{borrow::Cow, fs, time::Duration};
 
 use self::{screenshots::Screenshots, timer::Timer, actions::Action, shortcut::{AllShortcuts, NewShortcut}};
 
