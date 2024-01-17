@@ -978,8 +978,6 @@ impl App for AppUtility {
                     });
             });
 
-            
-
         Window::new("Timer form")
             .title_bar(false)
             .open(&mut self.timer.form_opened())
