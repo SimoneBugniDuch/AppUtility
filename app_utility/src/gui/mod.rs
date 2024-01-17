@@ -2,7 +2,7 @@ mod actions;
 mod screenshots;
 mod shortcut;
 
-use std::{time::Duration, fs};
+use std::{time::Duration, fs, borrow::Cow};
 use native_dialog::FileDialog;
 use chrono::Local;
 use eframe::{
@@ -11,6 +11,7 @@ use eframe::{
     run_native, App, Frame,
 };
 use image::{self, load_from_memory, ImageError};
+use arboard::{Clipboard, ImageData};
 
 use self::screenshots::Screenshots;
 use self::shortcut::NewShortcut;
@@ -82,7 +83,17 @@ impl AppUtility {
             Action::Close => {
                 frame.close();
             }
-            Action::Copy => {}
+            Action::Copy => {
+                let mut clipboard = Clipboard::new().unwrap();
+                let image = load_image_from_mem(&self.buffer.clone().unwrap()).unwrap();
+                let bytes = image.as_raw();
+                let image_data = ImageData {
+                    width: image.width() as usize,
+                    height: image.height() as usize,
+                    bytes: Cow::from(bytes.as_ref()),
+                };
+                clipboard.set_image(image_data).unwrap();
+            }
             Action::HomePage => {
                 self.selecting_area = false;
                 self.view_image = false;
@@ -213,9 +224,10 @@ impl App for AppUtility {
                         cross_justify: true,
                     },
                     |ui| {
-                        // match  {
-                        //     self.shortcuts.listener(ctx)    
-                        // }
+                        match self.shortcuts.listener(ctx, self.view_image) {
+                            Some(action) => self.make_action(action, ctx, frame),
+                            None => {},
+                        }
 
                         if !self.view_image {
                             if custom_button(
@@ -297,6 +309,11 @@ impl App for AppUtility {
                         cross_justify: true,
                     },
                     |ui| {
+                        match self.shortcuts.listener(ctx, self.view_image) {
+                            Some(action) => self.make_action(action, ctx, frame),
+                            None => {},
+                        }
+
                         if self.view_image {
                             println!("Now I'm seeing the image");
                             if custom_button(ui, "Modify", Color32::BLACK, Color32::GRAY).clicked() {

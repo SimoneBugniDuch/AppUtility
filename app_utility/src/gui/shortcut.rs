@@ -51,7 +51,7 @@ impl ShortCut {
 
     fn shortcut_listener(&self, ctx: &egui::Context) -> Option<Action> {
         if ctx.input_mut(|input_state| input_state.consume_shortcut(&self.shortcut)) && self.active {
-            Some(self.action.clone())
+            Some(self.action)
         } else {
             None
         }
@@ -78,7 +78,7 @@ impl AllShortcuts {
         }
     }
 
-    pub fn listener(&self, ctx: &egui::Context) -> Option<Action> {
+    pub fn listener(&self, ctx: &egui::Context, image_viewing: bool) -> Option<Action> {
         for shortcut in self.vec.iter() {
             if shortcut.action == Action::Settings || shortcut.action == Action::Close {
                 if shortcut.active {
@@ -88,7 +88,7 @@ impl AllShortcuts {
                 }
             } else {
                 //Shortcuts that can be pressed when viewing the image
-                if shortcut.while_viewing_image && shortcut.active {
+                if shortcut.while_viewing_image == image_viewing && shortcut.active {
                     if let Some(action) = shortcut.shortcut_listener(ctx) {
                         return Some(action);
                     }
