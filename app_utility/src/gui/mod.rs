@@ -329,7 +329,7 @@ impl App for AppUtility {
                 )
             });
 
-        Window::new("screenshot_taken menu_bar")
+        Window::new("screenshot_taken toolbar")
         //TODO: QUI BISOGNA INSERIRE I BOTTONI DI MODIFICA, DI COPIA ECC...
             .title_bar(false)
             .open(&mut self.view_image.clone())
@@ -340,7 +340,8 @@ impl App for AppUtility {
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .fixed_size([600.0, 50.0])
+            .anchor( egui::Align2::CENTER_TOP, [0.0, 30.0])
+            .fixed_size([600.0, 30.0])
             .resizable(false)
             .show(ctx, |ui| {
                 ui.with_layout(
@@ -510,10 +511,8 @@ impl App for AppUtility {
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .default_rect(egui::Rect::from_center_size(
-                egui::Pos2::new(frame.info().window_info.size.x / 2.0, 30.0),
-                egui::Vec2::new(300.0, 30.0),
-            ))
+            .anchor(egui::Align2::CENTER_TOP, [0.0, 30.0]) // Center the window
+            .default_size(egui::vec2(200.0, 30.0))
             .resizable(false)
             .open(&mut self.selecting_area.clone())
             .show(ctx, |ui| {
@@ -540,7 +539,6 @@ impl App for AppUtility {
                         }
 
                         ui.add_space(10.0);
-
                         if custom_button(
                             ui,
                             " ⟲  HomePage  ",
