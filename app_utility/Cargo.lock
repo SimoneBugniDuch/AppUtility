@@ -163,7 +163,6 @@ checksum = "a4668cab20f66d8d020e1fbc0ebe47217433c1b6c8f2040faf858554e394ace6"
 name = "app_utility"
 version = "0.1.0"
 dependencies = [
- "arboard",
  "chrono",
  "eframe",
  "image",
@@ -178,8 +177,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aafb29b107435aa276664c1db8954ac27a6e105cdad3c88287a199eb0e313c08"
 dependencies = [
  "clipboard-win",
- "core-graphics 0.22.3",
- "image",
  "log",
  "objc",
  "objc-foundation",

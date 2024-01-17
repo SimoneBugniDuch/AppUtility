@@ -23,15 +23,15 @@ impl NewShortcut {
             key: None,
             default: true,
             action: None,
-            description: String::new(),
+            description: String::from(""),
         }
     }
 }
 
 pub struct ShortCut {
-    name: String,
-    description: String,
-    shortcut: KeyboardShortcut,
+    pub name: String,
+    pub description: String,
+    pub shortcut: KeyboardShortcut,
     active: bool,
     action: Action,
 }
@@ -49,7 +49,7 @@ impl ShortCut {
 }
 
 pub struct ShortcutVec {
-    set: Vec<ShortCut>,
+    pub set: Vec<ShortCut>,
     pub show: bool,
 }
 
