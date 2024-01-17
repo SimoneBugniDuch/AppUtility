@@ -2,8 +2,7 @@ mod actions;
 mod screenshots;
 mod shortcut;
 
-use std::{time::Duration, fs, borrow::Cow};
-use native_dialog::FileDialog;
+use arboard::{Clipboard, ImageData};
 use chrono::Local;
 use eframe::{
     egui::{self, Color32, Layout, Sense, TextureHandle, Visuals, Window},
@@ -11,7 +10,8 @@ use eframe::{
     run_native, App, Frame,
 };
 use image::{self, load_from_memory, ImageError};
-use arboard::{Clipboard, ImageData};
+use native_dialog::FileDialog;
+use std::{borrow::Cow, fs, time::Duration};
 
 use self::screenshots::Screenshots;
 use self::shortcut::NewShortcut;
@@ -35,7 +35,7 @@ struct AppUtility {
     shortcuts: AllShortcuts,
     modification: bool,
     modifier: Modifier,
-    modified_element: ModifiedElement, 
+    modified_element: ModifiedElement,
     modifications_vector: Vec<Modifier>,
 }
 
@@ -98,7 +98,7 @@ impl AppUtility {
             shortcuts: AllShortcuts::default(),
             modification: false,
             modifier: Modifier::NotSelected,
-            modified_element: ModifiedElement{
+            modified_element: ModifiedElement {
                 pen: Default::default(),
                 rect: Default::default(),
                 circle: Default::default(),
@@ -205,7 +205,7 @@ impl AppUtility {
 impl App for AppUtility {
     fn update(&mut self, ctx: &eframe::egui::Context, frame: &mut eframe::Frame) {
         ctx.set_visuals(Visuals::light());
-
+    
         if self.hide {
             println!("Now I'm hiding");
             std::thread::sleep(Duration::from_millis(300));
@@ -249,8 +249,8 @@ impl App for AppUtility {
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .anchor(egui::Align2::CENTER_TOP, [0.0, 30.0]) // Center the window
-            .default_size(egui::vec2(200.0, 30.0))
+            .default_pos(calc_center_position(ctx, 500.0, 20.0))
+            .default_size(egui::vec2(250.0, 30.0))
             .resizable(false)
             .open(&mut (!self.view_image && !self.selecting_area && !self.show_settings))
             .show(ctx, |ui| {
@@ -266,7 +266,7 @@ impl App for AppUtility {
                     |ui| {
                         match self.shortcuts.listener(ctx, self.view_image) {
                             Some(action) => self.make_action(action, ctx, frame),
-                            None => {},
+                            None => {}
                         }
 
                         if !self.view_image {
@@ -330,7 +330,7 @@ impl App for AppUtility {
             });
 
         Window::new("screenshot_taken toolbar")
-        //TODO: QUI BISOGNA INSERIRE I BOTTONI DI MODIFICA, DI COPIA ECC...
+            //TODO: QUI BISOGNA INSERIRE I BOTTONI DI MODIFICA, DI COPIA ECC...
             .title_bar(false)
             .open(&mut self.view_image.clone())
             .frame(egui::Frame {
@@ -340,8 +340,8 @@ impl App for AppUtility {
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .anchor( egui::Align2::CENTER_TOP, [0.0, 30.0])
             .fixed_size([600.0, 30.0])
+            .default_pos(calc_center_position(ctx, 450.0, 20.0))
             .resizable(false)
             .show(ctx, |ui| {
                 ui.with_layout(
@@ -356,12 +356,13 @@ impl App for AppUtility {
                     |ui| {
                         match self.shortcuts.listener(ctx, self.view_image) {
                             Some(action) => self.make_action(action, ctx, frame),
-                            None => {},
+                            None => {}
                         }
 
                         if self.view_image && !self.modification {
                             println!("Now I'm seeing the image");
-                            if custom_button(ui, "Modify", Color32::BLACK, Color32::GRAY).clicked() {
+                            if custom_button(ui, "Modify", Color32::BLACK, Color32::GRAY).clicked()
+                            {
                                 self.make_action(Action::Modify, ctx, frame);
                             }
                             if custom_button(ui, "Save", Color32::BLACK, Color32::GRAY).clicked() {
@@ -370,20 +371,30 @@ impl App for AppUtility {
                             if custom_button(ui, "Copy", Color32::BLACK, Color32::GRAY).clicked() {
                                 self.make_action(Action::Copy, ctx, frame);
                             }
-                            if custom_button(ui, "New screenshot", Color32::BLACK, Color32::GRAY).clicked() {
+                            if custom_button(ui, "New screenshot", Color32::BLACK, Color32::GRAY)
+                                .clicked()
+                            {
                                 self.make_action(Action::NewScreenshot, ctx, frame);
                                 //Magari se ci sono delle modifiche non salvate conviene chiedere conferma (Discard all unsaved changes?)
                             }
-                            if custom_button(ui, "Settings", Color32::BLACK, Color32::GRAY).clicked() {
+                            if custom_button(ui, "Settings", Color32::BLACK, Color32::GRAY)
+                                .clicked()
+                            {
                                 self.make_action(Action::Settings, ctx, frame);
                             }
-                            if circular_button(ui, " x ", egui::Color32::WHITE, egui::Color32::from_rgb(210, 69, 69), 20.0,)
+                            if circular_button(
+                                ui,
+                                " x ",
+                                egui::Color32::WHITE,
+                                egui::Color32::from_rgb(210, 69, 69),
+                                15.0,
+                            )
                             .on_hover_text("Close the app")
                             .clicked()
                             {
                                 self.make_action(Action::Close, ctx, frame);
                             }
-                        }else{
+                        } else {
                             if ui.button(" 🖊  ").on_hover_text("Draw").clicked() {
                                 //fare la modifica effettiva
                                 self.modifier = Modifier::Pen;
@@ -396,7 +407,11 @@ impl App for AppUtility {
                                 //fare la modifica effettiva
                                 self.modifier = Modifier::Arrow;
                             }
-                            if ui.button("  ☐  ").on_hover_text("Draw a rectangle").clicked() {
+                            if ui
+                                .button("  ☐  ")
+                                .on_hover_text("Draw a rectangle")
+                                .clicked()
+                            {
                                 //fare la modifica effettiva
                                 self.modifier = Modifier::Rect;
                             }
@@ -404,7 +419,11 @@ impl App for AppUtility {
                                 //fare la modifica effettiva
                                 self.modifier = Modifier::Circle;
                             }
-                            if ui.button("  Text  ").on_hover_text("Write a text").clicked() {
+                            if ui
+                                .button("  Text  ")
+                                .on_hover_text("Write a text")
+                                .clicked()
+                            {
                                 //fare la modifica effettiva
                                 self.modifier = Modifier::Text;
                             }
@@ -430,13 +449,13 @@ impl App for AppUtility {
                                 //fare la modifica effettiva
                                 self.modifier = Modifier::Crop;
                             }
-                            if self.modifier == Modifier::Crop{
-                                if ui.button("  Save crop  ").clicked(){
+                            if self.modifier == Modifier::Crop {
+                                if ui.button("  Save crop  ").clicked() {
                                     self.modifier = Modifier::NotSelected;
                                     self.hide = true;
                                 }
                             }
-                           
+
                             if ui.button("  ⟲  ").on_hover_text("undo").clicked() {
                                 self.make_action(Action::Undo, ctx, frame);
                             }
@@ -479,7 +498,7 @@ impl App for AppUtility {
                 );
                 println!("I'm viewing the image!!");
                 //qua vedo e salvo le modifiche che sto effettuando dopo aver schiacciato il bottone
-                if self.modification{
+                if self.modification {
                     match self.modifier {
                         Modifier::NotSelected => {}
                         Modifier::Pen => {
@@ -511,8 +530,8 @@ impl App for AppUtility {
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .anchor(egui::Align2::CENTER_TOP, [0.0, 30.0]) // Center the window
             .default_size(egui::vec2(200.0, 30.0))
+            .default_pos(calc_center_position(ctx, 300.0, 30.0))
             .resizable(false)
             .open(&mut self.selecting_area.clone())
             .show(ctx, |ui| {
@@ -598,6 +617,7 @@ impl App for AppUtility {
             }
         }
 
+        
         Window::new("settings_page")
             .open(&mut self.show_settings)
             .frame(egui::Frame {
@@ -607,7 +627,7 @@ impl App for AppUtility {
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .anchor(egui::Align2::CENTER_TOP, [0.0, 100.0]) // Center the window
+            .default_pos(calc_center_position(ctx, 800.0, 100.0))
             .movable(true)
             .resizable(false)
             .show(ctx, |ui| {
@@ -653,7 +673,6 @@ impl App for AppUtility {
                 // Buttons for saving and discarding changes
                 ui.add_space(20.0);
                 ui.horizontal(|ui| {
-                    
                     if custom_button_with_font_size(
                         ui,
                         "Save all changes",
@@ -681,6 +700,12 @@ impl App for AppUtility {
                 // End of shortcuts settings window
             });
     }
+}
+
+fn calc_center_position(ctx: &egui::Context, window_width: f32, pos_y: f32, ) -> egui::Pos2 {
+    let screen_width = ctx.available_rect().width(); // Set the screen width
+    let window_x = (screen_width - window_width) / 2.0; // Centered x-coordinate
+    egui::pos2(window_x, pos_y) // Return the position
 }
 
 // Version with font_size
@@ -752,7 +777,11 @@ fn circular_button(
 }
 
 fn build_default_name() -> String {
-    let now = Local::now().to_string().replace("-", "").replace(":", "_").replace(" ", "-");
+    let now = Local::now()
+        .to_string()
+        .replace("-", "")
+        .replace(":", "_")
+        .replace(" ", "-");
     format!("Screenshot_{}", now)[..28].to_string()
 }
 
