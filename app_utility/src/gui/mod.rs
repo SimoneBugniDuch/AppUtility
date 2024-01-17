@@ -14,7 +14,7 @@ use eframe::{
 };
 use image::{self, load_from_memory, ImageError};
 
-use self::{screenshots::Screenshots, timer::Timer, actions::Action, shortcut::{AllShortcuts, NewShortcut}};
+use self::{screenshots::Screenshots, timer::Timer, actions::Action, shortcut::{AllShortcuts, NewShortcut, KeyboardKeys}};
 
 struct AppUtility {
     buffer: Option<Vec<u8>>,
@@ -372,12 +372,11 @@ impl App for AppUtility {
                             }
 
                             ui.add_space(10.0);
-                            if circular_button(
+                            if custom_button(
                                 ui,
-                                " x ",
+                                "x",
                                 egui::Color32::WHITE,
                                 egui::Color32::from_rgb(210, 69, 69),
-                                20.0,
                             )
                             .on_hover_text("Close the app")
                             .clicked()
@@ -895,7 +894,7 @@ impl App for AppUtility {
         }
 
         
-        Window::new("settings_page")
+        Window::new("Settings:")
             .open(&mut self.show_settings)
             .frame(egui::Frame {
                 fill: egui::Color32::LIGHT_GRAY,
@@ -913,69 +912,80 @@ impl App for AppUtility {
                 ui.separator();
                 ui.add_space(10.0);
                 egui::Grid::new("shortcut_grid")
-                    .spacing([170.0, 5.0])
+                    .spacing([10.0, 5.0])
                     .striped(true)
                     .show(ui, |ui| {
                         ui.label("Shortcut Name");
                         ui.label("Description");
                         ui.label("Keyboard combination");
+                        ui.label("Actions");
                         ui.end_row();
-
+        
                         for shortcut in &mut self.shortcuts.vec {
-                            let shortcut::ShortCut {
-                                name,
-                                description,
-                                shortcut,
-                                ..
-                            } = shortcut;
+                            
+                            // egui::ComboBox::from_id_source("All actions")
+                            //                 .selected_text(if self.new_shortcut.is_default {
+                            //                     "Select action".to_owned()
+                            //                 } else {
+                            //                     match self.new_shortcut.action {
+                            //                         Some(a) => a.to_string(),
+                            //                         None => "Select action".to_owned(),
+                            //                     }
+                            //                 })
+                            //                 .show_ui(ui, |ui| {
+                            //                     for a in AllActionArr::new().all_action.iter() {
+                            //                         let txt = format!("{}", a.to_string());
+                            //                         ui.selectable_value(
+                            //                             &mut self.new_shortcut.action,
+                            //                             Some(*a),
+                            //                             txt,
+                            //                         );
+                            //                     }
+                            //                 });
 
-                            // Calculate width based on text length plus padding
-                            let name_width = 100.0;
-                            let description_width = 300.0;
-
-                            ui.add_sized([name_width, 0.0], egui::TextEdit::singleline(name));
+                            
                             ui.add_sized(
-                                [description_width, 0.0],
-                                egui::TextEdit::singleline(description),
+                                [300.0, 0.0],
+                                egui::TextEdit::singleline(&mut shortcut.description),
                             );
-                            ui.add_sized(
-                                [name_width, 0.0],
-                                egui::TextEdit::singleline(&mut ctx.format_shortcut(&shortcut)),
-                            );
+        
+                            // Dropdown for keyboard shortcut
+                            egui::ComboBox::from_id_source("All keys")
+                                            .show_ui(ui, |ui| {
+                                                for k in KeyboardKeys::default().keys.iter() {
+                                                    let txt = format!("{}", k.name());
+                                                    
+                                                }
+                                            });
+                            
 
+        
+                            // Buttons for save and delete
+                            ui.horizontal(|ui| {
+                                if custom_button(
+                                    ui,
+                                    " save  ",
+                                    Color32::WHITE,
+                                    Color32::from_rgb(210, 69, 69),
+                                ).clicked() {
+                                    // Save logic here
+                                }
+                                if custom_button(
+                                    ui,
+                                    " delete  ",
+                                    Color32::WHITE,
+                                    Color32::from_rgb(210, 69, 69),
+                                ).clicked() {
+                                    // Delete logic here
+                                }
+                            });
+        
                             ui.end_row();
                         }
                     });
-
-                // Buttons for saving and discarding changes
-                ui.add_space(20.0);
-                ui.horizontal(|ui| {
-                    if custom_button_with_font_size(
-                        ui,
-                        "Save all changes",
-                        egui::Color32::DARK_GRAY,
-                        egui::Color32::from_rgb(229, 224, 255),
-                        10.0,
-                    )
-                    .clicked()
-                    {
-                        // Implement logic to discard changes and revert to original shortcuts
-                    }
-                    ui.add_space(10.0);
-                    if custom_button_with_font_size(
-                        ui,
-                        " Discard all changes",
-                        egui::Color32::DARK_GRAY,
-                        egui::Color32::from_rgb(229, 224, 255),
-                        10.0,
-                    )
-                    .clicked()
-                    {
-                        // Implement logic to discard changes and revert to original shortcuts
-                    }
-                });
-                // End of shortcuts settings window
             });
+
+            
     }
 }
 
