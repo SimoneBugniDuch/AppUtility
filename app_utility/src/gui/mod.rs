@@ -3,6 +3,7 @@ mod screenshots;
 mod shortcut;
 mod timer;
 
+use arboard::{Clipboard, ImageData};
 use std::{time::{Duration, Instant}, fs, borrow::Cow};
 use native_dialog::FileDialog;
 use chrono::Local;
@@ -12,7 +13,8 @@ use eframe::{
     run_native, App, Frame,
 };
 use image::{self, load_from_memory, ImageError};
-use arboard::{Clipboard, ImageData};
+use native_dialog::FileDialog;
+use std::{borrow::Cow, fs, time::Duration};
 
 use self::{screenshots::Screenshots, timer::Timer, actions::Action, shortcut::{AllShortcuts, NewShortcut}};
 
@@ -64,6 +66,7 @@ enum Modifier {
 }
 
 struct ModifiedElement {
+    stroke: egui::Stroke,
     pen: Vec<Vec<(egui::Pos2, egui::Stroke)>>,
     rect: Vec<Vec<(egui::Pos2, egui::Stroke)>>,
     circle: Vec<Vec<(egui::Pos2, egui::Stroke)>>,
@@ -98,7 +101,8 @@ impl AppUtility {
             shortcuts: AllShortcuts::default(),
             modification: false,
             modifier: Modifier::NotSelected,
-            modified_element: ModifiedElement{
+            modified_element: ModifiedElement {
+                stroke: egui::Stroke::new(1.0, egui::Color32::BLACK),
                 pen: Default::default(),
                 rect: Default::default(),
                 circle: Default::default(),
@@ -231,7 +235,7 @@ impl AppUtility {
 impl App for AppUtility {
     fn update(&mut self, ctx: &eframe::egui::Context, frame: &mut eframe::Frame) {
         ctx.set_visuals(Visuals::light());
-
+    
         if self.hide {
             println!("Now I'm hiding");
             std::thread::sleep(Duration::from_millis(300));
@@ -275,8 +279,8 @@ impl App for AppUtility {
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .anchor(egui::Align2::CENTER_TOP, [0.0, 30.0]) // Center the window
-            .default_size(egui::vec2(200.0, 30.0))
+            .default_pos(calc_center_position(ctx, 500.0, 20.0))
+            .default_size(egui::vec2(250.0, 30.0))
             .resizable(false)
             .open(&mut (!self.view_image && !self.selecting_area && !self.show_settings))
             .show(ctx, |ui| {
@@ -292,7 +296,7 @@ impl App for AppUtility {
                     |ui| {
                         match self.shortcuts.listener(ctx, self.view_image) {
                             Some(action) => self.make_action(action, ctx, frame),
-                            None => {},
+                            None => {}
                         }
 
                         if !self.view_image {
@@ -388,7 +392,7 @@ impl App for AppUtility {
             });
 
         Window::new("screenshot_taken toolbar")
-        //TODO: QUI BISOGNA INSERIRE I BOTTONI DI MODIFICA, DI COPIA ECC...
+            //TODO: QUI BISOGNA INSERIRE I BOTTONI DI MODIFICA, DI COPIA ECC...
             .title_bar(false)
             .open(&mut self.view_image.clone())
             .frame(egui::Frame {
@@ -398,8 +402,8 @@ impl App for AppUtility {
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .anchor( egui::Align2::CENTER_TOP, [0.0, 30.0])
             .fixed_size([600.0, 30.0])
+            .default_pos(calc_center_position(ctx, 450.0, 20.0))
             .resizable(false)
             .show(ctx, |ui| {
                 ui.with_layout(
@@ -414,12 +418,13 @@ impl App for AppUtility {
                     |ui| {
                         match self.shortcuts.listener(ctx, self.view_image) {
                             Some(action) => self.make_action(action, ctx, frame),
-                            None => {},
+                            None => {}
                         }
 
                         if self.view_image && !self.modification {
                             println!("Now I'm seeing the image");
-                            if custom_button(ui, "Modify", Color32::BLACK, Color32::GRAY).clicked() {
+                            if custom_button(ui, "Modify", Color32::BLACK, Color32::GRAY).clicked()
+                            {
                                 self.make_action(Action::Modify, ctx, frame);
                             }
                             if custom_button(ui, "Save", Color32::BLACK, Color32::GRAY).clicked() {
@@ -428,20 +433,30 @@ impl App for AppUtility {
                             if custom_button(ui, "Copy", Color32::BLACK, Color32::GRAY).clicked() {
                                 self.make_action(Action::Copy, ctx, frame);
                             }
-                            if custom_button(ui, "New screenshot", Color32::BLACK, Color32::GRAY).clicked() {
+                            if custom_button(ui, "New screenshot", Color32::BLACK, Color32::GRAY)
+                                .clicked()
+                            {
                                 self.make_action(Action::NewScreenshot, ctx, frame);
                                 //Magari se ci sono delle modifiche non salvate conviene chiedere conferma (Discard all unsaved changes?)
                             }
-                            if custom_button(ui, "Settings", Color32::BLACK, Color32::GRAY).clicked() {
+                            if custom_button(ui, "Settings", Color32::BLACK, Color32::GRAY)
+                                .clicked()
+                            {
                                 self.make_action(Action::Settings, ctx, frame);
                             }
-                            if circular_button(ui, " x ", egui::Color32::WHITE, egui::Color32::from_rgb(210, 69, 69), 20.0,)
+                            if circular_button(
+                                ui,
+                                " x ",
+                                egui::Color32::WHITE,
+                                egui::Color32::from_rgb(210, 69, 69),
+                                15.0,
+                            )
                             .on_hover_text("Close the app")
                             .clicked()
                             {
                                 self.make_action(Action::Close, ctx, frame);
                             }
-                        }else{
+                        } else {
                             if ui.button(" 🖊  ").on_hover_text("Draw").clicked() {
                                 //fare la modifica effettiva
                                 self.modifier = Modifier::Pen;
@@ -454,7 +469,11 @@ impl App for AppUtility {
                                 //fare la modifica effettiva
                                 self.modifier = Modifier::Arrow;
                             }
-                            if ui.button("  ☐  ").on_hover_text("Draw a rectangle").clicked() {
+                            if ui
+                                .button("  ☐  ")
+                                .on_hover_text("Draw a rectangle")
+                                .clicked()
+                            {
                                 //fare la modifica effettiva
                                 self.modifier = Modifier::Rect;
                             }
@@ -462,7 +481,11 @@ impl App for AppUtility {
                                 //fare la modifica effettiva
                                 self.modifier = Modifier::Circle;
                             }
-                            if ui.button("  Text  ").on_hover_text("Write a text").clicked() {
+                            if ui
+                                .button("  Text  ")
+                                .on_hover_text("Write a text")
+                                .clicked()
+                            {
                                 //fare la modifica effettiva
                                 self.modifier = Modifier::Text;
                             }
@@ -488,15 +511,18 @@ impl App for AppUtility {
                                 //fare la modifica effettiva
                                 self.modifier = Modifier::Crop;
                             }
-                            if self.modifier == Modifier::Crop{
-                                if ui.button("  Save crop  ").clicked(){
+                            if self.modifier == Modifier::Crop {
+                                if ui.button("  Save crop  ").clicked() {
                                     self.modifier = Modifier::NotSelected;
                                     self.hide = true;
                                 }
                             }
-                           
+
                             if ui.button("  ⟲  ").on_hover_text("undo").clicked() {
                                 self.make_action(Action::Undo, ctx, frame);
+                            }
+                            if ui.button("  X  ").on_hover_text("Close").clicked() {
+                                self.modification = false;
                             }
                         }
                     },
@@ -537,27 +563,241 @@ impl App for AppUtility {
                 );
                 println!("I'm viewing the image!!");
                 //qua vedo e salvo le modifiche che sto effettuando dopo aver schiacciato il bottone
-                if self.modification{
+                if self.modification {
                     match self.modifier {
                         Modifier::NotSelected => {}
                         Modifier::Pen => {
                             //azione
+                            response.clone().on_hover_cursor(egui::output::CursorIcon::PointingHand);
+                            if self.modified_element.pen.is_empty() {
+                                self.modified_element.pen.push(vec![]);
+                            }
+                            let current_line = self.modified_element.pen.last_mut().unwrap();
+
+                            if let Some(pointer_pos) = response.interact_pointer_pos() {
+                                if current_line.last()
+                                    != Some(&(pointer_pos, self.modified_element.stroke))
+                                {
+                                    current_line
+                                        .push((pointer_pos, self.modified_element.stroke));
+                                    response.mark_changed();
+                                }
+                            } else if !current_line.is_empty() {
+                                self.modified_element.pen.push(vec![]);
+                                response.mark_changed();
+                                self.modifications_vector.push(Modifier::Pen);
+                            }
                         }
                         Modifier::Rect => {
                             //azione
+                            response.clone().on_hover_cursor(egui::output::CursorIcon::Crosshair);
+                            if self.modified_element.rect.is_empty() {
+                                self.modified_element.rect.push(vec![]);
+                            }
+                            let current_line = self.modified_element.rect.last_mut().unwrap();
+
+                            if let Some(pointer_pos) = response.interact_pointer_pos() {
+                                if current_line.last()
+                                    != Some(&(pointer_pos, self.modified_element.stroke))
+                                {
+                                    current_line
+                                        .push((pointer_pos, self.modified_element.stroke));
+                                    response.mark_changed();
+                                }
+                            } else if !current_line.is_empty() {
+                                self.modified_element.rect.push(vec![]);
+                                response.mark_changed();
+                                self.modifications_vector.push(Modifier::Rect);
+                            }
                         }
                         Modifier::Arrow => {
                             //azione
+                            response.clone().on_hover_cursor(egui::output::CursorIcon::Crosshair);
+                            if self.modified_element.arrow.is_empty() {
+                                self.modified_element.arrow.push(vec![]);
+                            }
+                            let current_line = self.modified_element.arrow.last_mut().unwrap();
+
+                            if let Some(pointer_pos) = response.interact_pointer_pos() {
+                                if current_line.last()
+                                    != Some(&(pointer_pos, self.modified_element.stroke))
+                                {
+                                    current_line
+                                        .push((pointer_pos, self.modified_element.stroke));
+                                    response.mark_changed();
+                                }
+                            } else if !current_line.is_empty() {
+                                self.modified_element.arrow.push(vec![]);
+                                response.mark_changed();
+                                self.modifications_vector.push(Modifier::Arrow);
+                            }
                         }
                         Modifier::Line => {
                             //azione
+                            response.clone().on_hover_cursor(egui::output::CursorIcon::Crosshair);
+                            if self.modified_element.line.is_empty() {
+                                self.modified_element.line.push(vec![]);
+                            }
+
+                            let current_line = self.modified_element.line.last_mut().unwrap();
+
+                            if let Some(pointer_pos) = response.interact_pointer_pos() {
+                                if current_line.last()
+                                    != Some(&(pointer_pos, self.modified_element.stroke))
+                                {
+                                    current_line
+                                        .push((pointer_pos, self.modified_element.stroke));
+                                    response.mark_changed();
+                                }
+                            } else if !current_line.is_empty() {
+                                self.modified_element.line.push(vec![]);
+                                response.mark_changed();
+                                self.modifications_vector.push(Modifier::Line);
+                            }
                         }
                         Modifier::Circle => {
                             //azione
+                            response.clone().on_hover_cursor(egui::output::CursorIcon::Crosshair);
+                            if self.modified_element.circle.is_empty() {
+                                self.modified_element.circle.push(vec![]);
+                            }
+                            let current_line = self.modified_element.circle.last_mut().unwrap();
+
+                            if let Some(pointer_pos) = response.interact_pointer_pos() {
+                                if current_line.last()
+                                    != Some(&(pointer_pos, self.modified_element.stroke))
+                                {
+                                    current_line
+                                        .push((pointer_pos, self.modified_element.stroke));
+                                    response.mark_changed();
+                                }
+                            } else if !current_line.is_empty() {
+                                self.modified_element.circle.push(vec![]);
+                                response.mark_changed();
+                                self.modifications_vector.push(Modifier::Circle);
+                            }
                         }
+                        Modifier::Text => {
+                            //azione
+                            let res = egui::Area::new("text")
+                                .movable(true)
+                                .default_pos(egui::Pos2::new(
+                                    (frame.info().window_info.size[0] - 20.0) / 2.0,
+                                    (frame.info().window_info.size[1] - 20.0) / 2.0,
+                                ))
+                                .drag_bounds(egui::Rect::from_center_size(
+                                    egui::Pos2::new(
+                                        (frame.info().window_info.size[0]) / 2.0,
+                                        (frame.info().window_info.size[1]) / 2.0,
+                                    ),
+                                    egui::Vec2::new(dim_img.0, dim_img.1),
+                                ))
+                                .order(egui::layers::Order::Foreground)
+                                .show(ctx, |ui| {
+                                    ui.vertical(|ui| {
+                                        ui.label(
+                                            egui::RichText::new(format!(
+                                                "{}",
+                                                self.modified_element.text,
+                                            ))
+                                            .color(self.modified_element.stroke.color)
+                                            .size(
+                                                self.modified_element.stroke.width * 20.0 + 0.1,
+                                            ),
+                                        );
+                                    });
+                                });
+                        }
+                        Modifier::Crop => {
+                            let area = egui::Window::new("crop_area")
+                                .title_bar(false)
+                                .default_size(egui::vec2(320.0, 240.0))
+                                .resizable(true)
+                                .movable(true)
+                                .resize(|r| r.min_size(egui::vec2(1.0, 1.0)))
+                                .resize(|r| r.max_size(egui::vec2(dim_img.0, dim_img.1)))
+                                .default_pos(egui::Pos2::new(
+                                    (frame.info().window_info.size[0] - 320.0) / 2.0,
+                                    (frame.info().window_info.size[1] - 240.0) / 2.0,
+                                ))
+                                .drag_bounds(egui::Rect::from_center_size(
+                                    egui::Pos2::new(
+                                        (frame.info().window_info.size[0]) / 2.0,
+                                        (frame.info().window_info.size[1]) / 2.0,
+                                    ),
+                                    egui::Vec2::new(dim_img.0, dim_img.1),
+                                ))
+                                .frame(egui::Frame {
+                                    stroke: egui::Stroke::new(1.5, egui::Color32::WHITE),
+                                    shadow: egui::epaint::Shadow::small_light(),
+                                    ..Default::default()
+                                })
+                                .show(ctx, |ui| {
+                                    ui.allocate_space(ui.available_size());
+                                });
+
+                            let rectangle = area.unwrap().response.rect;
+                            let mut adj = 1.0;
+                            if cfg!(target_os = "windows") {
+                                adj = frame.info().native_pixels_per_point.unwrap();
+                            } 
+                            self.rectangle = Rectangle {
+                                x: (rectangle.left()) * adj,
+                                y: (rectangle.top()) * adj,
+                                width: rectangle.width() * adj,
+                                height: rectangle.height() * adj,
+                            };
+                        }
+
                         _ => {}
                     }
                 }
+                let pen = self.modified_element.pen
+                    .iter().filter(|line| line.len() >= 2)
+                    .map(|line| {
+                        let points: Vec<egui::Pos2> = line.iter().map(|p| p.0).collect();
+                        let stroke = line[0].1;
+                        egui::Shape::line(points, stroke)
+                    });
+                let rect = self.modified_element.rect
+                    .iter()
+                    .filter(|line| line.len() >= 2)
+                    .map(|line| {
+                        let rect = egui::Rect::from_two_pos(
+                            line.first().unwrap().0,
+                            line.last().unwrap().0,
+                        );
+                        egui::Shape::rect_stroke(rect, egui::Rounding::none(), line[0].1)
+                    });
+                let circle = self.modified_element.circle
+                    .iter()
+                    .filter(|line| line.len() >= 2)
+                    .map(|line| {
+                        egui::Shape::circle_stroke(
+                            line.first().unwrap().0,
+                            line.first().unwrap().0.distance(line.last().unwrap().0),
+                            line[0].1,
+                        )
+                    });
+                let line = self.modified_element.line
+                    .iter()
+                    .filter(|line| line.len() >= 2)
+                    .map(|line| {
+                        let vec = [line.first().unwrap().0, line.last().unwrap().0];
+                        egui::Shape::line_segment(vec, line[0].1)
+                    });
+
+                for element in self.modified_element.arrow.clone() {
+                    if element.first().is_some() && element.last().is_some() {
+                        let line = element.first().unwrap().0 - element.last().unwrap().0;
+                        painter.arrow(element.first().unwrap().0, -line, element[0].1);
+                    }
+                }
+
+                painter.extend(pen);
+                painter.extend(line);
+                painter.extend(rect);
+                painter.extend(circle);
             });
 
         Window::new("screenshot_area menu_bar")
@@ -569,8 +809,8 @@ impl App for AppUtility {
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .anchor(egui::Align2::CENTER_TOP, [0.0, 30.0]) // Center the window
             .default_size(egui::vec2(200.0, 30.0))
+            .default_pos(calc_center_position(ctx, 300.0, 30.0))
             .resizable(false)
             .open(&mut self.selecting_area.clone())
             .show(ctx, |ui| {
@@ -656,6 +896,7 @@ impl App for AppUtility {
             }
         }
 
+        
         Window::new("settings_page")
             .open(&mut self.show_settings)
             .frame(egui::Frame {
@@ -665,7 +906,7 @@ impl App for AppUtility {
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .anchor(egui::Align2::CENTER_TOP, [0.0, 100.0]) // Center the window
+            .default_pos(calc_center_position(ctx, 800.0, 100.0))
             .movable(true)
             .resizable(false)
             .show(ctx, |ui| {
@@ -711,7 +952,6 @@ impl App for AppUtility {
                 // Buttons for saving and discarding changes
                 ui.add_space(20.0);
                 ui.horizontal(|ui| {
-                    
                     if custom_button_with_font_size(
                         ui,
                         "Save all changes",
@@ -739,6 +979,12 @@ impl App for AppUtility {
                 // End of shortcuts settings window
             });
     }
+}
+
+fn calc_center_position(ctx: &egui::Context, window_width: f32, pos_y: f32, ) -> egui::Pos2 {
+    let screen_width = ctx.available_rect().width(); // Set the screen width
+    let window_x = (screen_width - window_width) / 2.0; // Centered x-coordinate
+    egui::pos2(window_x, pos_y) // Return the position
 }
 
 // Version with font_size
@@ -810,7 +1056,11 @@ fn circular_button(
 }
 
 fn build_default_name() -> String {
-    let now = Local::now().to_string().replace("-", "").replace(":", "_").replace(" ", "-");
+    let now = Local::now()
+        .to_string()
+        .replace("-", "")
+        .replace(":", "_")
+        .replace(" ", "-");
     format!("Screenshot_{}", now)[..28].to_string()
 }
 
