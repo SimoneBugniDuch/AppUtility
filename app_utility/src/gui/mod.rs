@@ -240,7 +240,7 @@ impl App for AppUtility {
             frame.set_visible(true);
         }
 
-        Window::new("menu bar")
+        Window::new("home_page menu_bar")
             .title_bar(false)
             .frame(egui::Frame {
                 fill: egui::Color32::GRAY,
@@ -325,7 +325,7 @@ impl App for AppUtility {
                 )
             });
 
-        Window::new("Screenshot taken")
+        Window::new("screenshot_taken menu_bar")
         //TODO: QUI BISOGNA INSERIRE I BOTTONI DI MODIFICA, DI COPIA ECC...
             .title_bar(false)
             .open(&mut self.view_image.clone())
@@ -440,7 +440,7 @@ impl App for AppUtility {
                 )
             });
 
-        Window::new("View screenshot")
+        Window::new("screenshot_view")
             .title_bar(false)
             .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
             .frame(egui::Frame {
@@ -497,7 +497,7 @@ impl App for AppUtility {
                 }
             });
 
-        Window::new("Window when selecting area")
+        Window::new("screenshot_area menu_bar")
             .title_bar(false)
             .frame(egui::Frame {
                 fill: egui::Color32::LIGHT_GRAY,
@@ -552,7 +552,7 @@ impl App for AppUtility {
                 )
             });
 
-        let window = Window::new("Select area")
+        let window = Window::new("selection_area_rectangle")
             .title_bar(false)
             .default_size(egui::vec2(500.0, 300.0))
             .resizable(true)
@@ -596,7 +596,7 @@ impl App for AppUtility {
             }
         }
 
-        Window::new("Settings")
+        Window::new("settings_page")
             .open(&mut self.show_settings)
             .frame(egui::Frame {
                 fill: egui::Color32::LIGHT_GRAY,
