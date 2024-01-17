@@ -32,7 +32,7 @@ struct AppUtility {
     texture: Option<TextureHandle>,
     selecting_area: bool,
     show_settings: bool,
-    shortcuts: ShortcutVec,
+    shortcuts: AllShortcuts,
     modification: bool,
     modifier: Modifier,
     modified_element: ModifiedElement, 
@@ -95,7 +95,7 @@ impl AppUtility {
             view_image: false,
             texture: None,
             show_settings: false,
-            shortcuts: ShortcutVec::default(),
+            shortcuts: AllShortcuts::default(),
             modification: false,
             modifier: Modifier::NotSelected,
             modified_element: ModifiedElement{
