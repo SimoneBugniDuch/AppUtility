@@ -2,19 +2,20 @@ mod actions;
 mod screenshots;
 mod shortcut;
 
-use std::{sync::Arc, time::Duration, fs};
+use std::{time::Duration, fs, borrow::Cow};
 use native_dialog::FileDialog;
 use chrono::Local;
 use eframe::{
-    egui::{self, text, Color32, Layout, Sense, TextureHandle, Visuals, Window},
+    egui::{self, Color32, Layout, Sense, TextureHandle, Visuals, Window},
     epaint::vec2,
     run_native, App, Frame,
 };
-use image::{self, imageops::filter3x3, load_from_memory, ImageError};
+use image::{self, load_from_memory, ImageError};
+use arboard::{Clipboard, ImageData};
 
-use self::{actions::Action, shortcut::ShortcutVec};
 use self::screenshots::Screenshots;
 use self::shortcut::NewShortcut;
+use self::{actions::Action, shortcut::AllShortcuts};
 
 struct AppUtility {
     rectangle: Rectangle,
@@ -31,7 +32,7 @@ struct AppUtility {
     texture: Option<TextureHandle>,
     selecting_area: bool,
     show_settings: bool,
-    shortcuts: ShortcutVec,
+    shortcuts: AllShortcuts,
 }
 
 struct Rectangle {
@@ -69,7 +70,7 @@ impl AppUtility {
             view_image: false,
             texture: None,
             show_settings: false,
-            shortcuts: ShortcutVec::default(),
+            shortcuts: AllShortcuts::default(),
         }
     }
 
@@ -82,15 +83,28 @@ impl AppUtility {
             Action::Close => {
                 frame.close();
             }
-            Action::Copy => {}
+            Action::Copy => {
+                let mut clipboard = Clipboard::new().unwrap();
+                let image = load_image_from_mem(&self.buffer.clone().unwrap()).unwrap();
+                let bytes = image.as_raw();
+                let image_data = ImageData {
+                    width: image.width() as usize,
+                    height: image.height() as usize,
+                    bytes: Cow::from(bytes.as_ref()),
+                };
+                clipboard.set_image(image_data).unwrap();
+            }
             Action::HomePage => {
                 self.selecting_area = false;
+                self.view_image = false;
+                self.show_settings = false;
             }
             Action::Modify => {}
             Action::NewScreenshot => {
                 self.hide = false;
                 self.view_image = false;
                 self.selection_mode = Selection::Fullscreen;
+                self.selecting_area = false;
                 self.show_settings = false;
             }
             Action::Save => {
@@ -152,6 +166,7 @@ impl AppUtility {
 impl App for AppUtility {
     fn update(&mut self, ctx: &eframe::egui::Context, frame: &mut eframe::Frame) {
         ctx.set_visuals(Visuals::light());
+
         if self.hide {
             println!("Now I'm hiding");
             std::thread::sleep(Duration::from_millis(300));
@@ -210,6 +225,11 @@ impl App for AppUtility {
                         cross_justify: true,
                     },
                     |ui| {
+                        match self.shortcuts.listener(ctx, self.view_image) {
+                            Some(action) => self.make_action(action, ctx, frame),
+                            None => {},
+                        }
+
                         if !self.view_image {
                             if custom_button(
                                 ui,
@@ -290,6 +310,11 @@ impl App for AppUtility {
                         cross_justify: true,
                     },
                     |ui| {
+                        match self.shortcuts.listener(ctx, self.view_image) {
+                            Some(action) => self.make_action(action, ctx, frame),
+                            None => {},
+                        }
+
                         if self.view_image {
                             println!("Now I'm seeing the image");
                             if custom_button(ui, "Modify", Color32::BLACK, Color32::GRAY).clicked() {
@@ -380,18 +405,28 @@ impl App for AppUtility {
                         cross_justify: true,
                     },
                     |ui| {
-                        if custom_button(ui, " 📷  Capture  ", Color32::WHITE, Color32::from_rgb(142, 167, 233))
-                            .on_hover_text("Capture the area screenshot!")
-                            .clicked()
+                        if custom_button(
+                            ui,
+                            " 📷  Capture  ",
+                            Color32::WHITE,
+                            Color32::from_rgb(142, 167, 233),
+                        )
+                        .on_hover_text("Capture the area screenshot!")
+                        .clicked()
                         {
                             self.make_action(Action::Capture, ctx, frame);
                         }
-                        
+
                         ui.add_space(10.0);
 
-                        if custom_button(ui, " ⟲  HomePage  ", Color32::WHITE, Color32::from_rgb(210, 69, 69))
-                            .on_hover_text("Go back to the homepage")
-                            .clicked()
+                        if custom_button(
+                            ui,
+                            " ⟲  HomePage  ",
+                            Color32::WHITE,
+                            Color32::from_rgb(210, 69, 69),
+                        )
+                        .on_hover_text("Go back to the homepage")
+                        .clicked()
                         {
                             self.make_action(Action::HomePage, ctx, frame);
                         }
@@ -399,9 +434,9 @@ impl App for AppUtility {
                 )
             });
 
-        let window = Window::new("Select area")
+        /*let window = */Window::new("Select area")
             .title_bar(false)
-            .default_size(egui::vec2(300.0, 300.0))
+            .default_size(egui::vec2(500.0, 300.0))
             .resizable(true)
             .movable(true)
             .default_pos(egui::Pos2::new(
@@ -416,7 +451,10 @@ impl App for AppUtility {
             })
             .resize(|r| r.min_size(egui::vec2(2.0, 2.0)))
             .frame(egui::Frame {
-                stroke: egui::Stroke { width: 1.0, color: Color32::WHITE },
+                stroke: egui::Stroke {
+                    width: 1.0,
+                    color: Color32::WHITE,
+                },
                 ..Default::default()
             })
             .open(&mut self.selecting_area)
@@ -425,20 +463,20 @@ impl App for AppUtility {
                 println!("Am I here?!");
             });
 
-        if self.selecting_area {
-            println!("Do I need to be here?");
-            let rect = window.unwrap().response.rect;
-            let mut corr = 1.0;
-            if cfg!(target_os = "windows") {
-                corr = frame.info().native_pixels_per_point.unwrap();
-            }
-            self.rectangle = Rectangle {
-                x: rect.left() * corr,
-                y: rect.top() * corr,
-                width: rect.width() * corr,
-                height: rect.height() * corr,
-            }
-        }
+        // if self.selecting_area {
+        //     println!("Do I need to be here?");
+        //     let rect = window.unwrap().response.rect;
+        //     let mut corr = 1.0;
+        //     if cfg!(target_os = "windows") {
+        //         corr = frame.info().native_pixels_per_point.unwrap();
+        //     }
+        //     self.rectangle = Rectangle {
+        //         x: rect.left() * corr,
+        //         y: rect.top() * corr,
+        //         width: rect.width() * corr,
+        //         height: rect.height() * corr,
+        //     }
+        // }
 
         Window::new("Settings")
             .open(&mut self.show_settings)
@@ -449,10 +487,12 @@ impl App for AppUtility {
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
+            .anchor(egui::Align2::CENTER_TOP, [0.0, 100.0]) // Center the window
             .movable(true)
             .resizable(false)
             .show(ctx, |ui| {
-                ui.label("Settings");
+                ui.add_space(20.0);
+                ui.heading("Shortcuts settings: ");
                 ui.separator();
                 ui.add_space(10.0);
                 egui::Grid::new("shortcut_grid")
@@ -523,29 +563,27 @@ impl App for AppUtility {
     }
 }
 
-fn custom_button(
+// Version with font_size
+fn custom_button_with_font_size(
     ui: &mut egui::Ui,
     text: &str,
     text_color: Color32,
     bg_color: Color32,
+    font_size: f32,
 ) -> egui::Response {
     // Store the previous button style
     let previous_button_padding = ui.style().spacing.button_padding;
 
-    // Set the desired button padding
-    // let padding = egui::vec2(30.0, 10.0);
-
-    let font_size = 20.0;
     // Create a RichText with the desired text color, bold style, and font size
     let rich_text = egui::RichText::new(text)
         .color(text_color)
-        .size(font_size) // Set the font size
+        .size(font_size)
         .strong();
 
     let button_size = egui::vec2(text.len() as f32 * 10.0, font_size);
 
     // Create and add the button to the UI
-    let button = egui::Button::new(rich_text).fill(bg_color).rounding(10.0); // Set the rounding for corners
+    let button = egui::Button::new(rich_text).fill(bg_color).rounding(10.0);
 
     let response = ui.add_sized(button_size, button);
 
