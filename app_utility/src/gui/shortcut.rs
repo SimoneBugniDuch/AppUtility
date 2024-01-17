@@ -71,12 +71,12 @@ pub struct AllShortcuts {
 impl AllShortcuts {
     pub fn default() -> Self {
         let mut vec = Vec::new();
-        vec.push(ShortCut::new(Modifiers::CTRL, Key::C, "Copy to clipboard".to_string(), Action::Copy));
-        vec.push(ShortCut::new(Modifiers::CTRL, Key::H, "Go to the home page".to_string(), Action::HomePage));
-        vec.push(ShortCut::new(Modifiers::CTRL, Key::N, "Take a new screenshot".to_string(), Action::NewScreenshot));
-        vec.push(ShortCut::new(Modifiers::CTRL, Key::S, "Save".to_string(), Action::Save));
-        vec.push(ShortCut::new(Modifiers::CTRL, Key::W, "Close the application".to_string(), Action::Close));
-        vec.push(ShortCut::new(Modifiers::CTRL, Key::Z, "Undo".to_string(), Action::Undo));
+        vec.push(ShortCut::new(Modifiers::COMMAND, Key::C, "Copy to clipboard".to_string(), Action::Copy));
+        vec.push(ShortCut::new(Modifiers::COMMAND, Key::H, "Go to the home page".to_string(), Action::HomePage));
+        vec.push(ShortCut::new(Modifiers::COMMAND, Key::N, "Take a new screenshot".to_string(), Action::NewScreenshot));
+        vec.push(ShortCut::new(Modifiers::COMMAND, Key::S, "Save".to_string(), Action::Save));
+        vec.push(ShortCut::new(Modifiers::COMMAND, Key::W, "Close the application".to_string(), Action::Close));
+        vec.push(ShortCut::new(Modifiers::COMMAND, Key::Z, "Undo".to_string(), Action::Undo));
         Self {
             vec,
             show: false,
