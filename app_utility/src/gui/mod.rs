@@ -104,6 +104,7 @@ impl AppUtility {
                 self.hide = false;
                 self.view_image = false;
                 self.selection_mode = Selection::Fullscreen;
+                self.selecting_area = false;
                 self.show_settings = false;
             }
             Action::Save => {
@@ -433,9 +434,9 @@ impl App for AppUtility {
                 )
             });
 
-        let window = Window::new("Select area")
+        /*let window = */Window::new("Select area")
             .title_bar(false)
-            .default_size(egui::vec2(300.0, 300.0))
+            .default_size(egui::vec2(500.0, 300.0))
             .resizable(true)
             .movable(true)
             .default_pos(egui::Pos2::new(

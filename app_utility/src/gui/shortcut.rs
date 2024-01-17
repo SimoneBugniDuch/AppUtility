@@ -28,6 +28,7 @@ impl NewShortcut {
     }
 }
 
+#[derive(Clone)]
 pub struct ShortCut {
     pub name: String,
     pub description: String,
@@ -96,5 +97,38 @@ impl AllShortcuts {
             }
         }
         None
+    }
+
+    pub fn save_new_shortcut(&mut self, new_shortcut: &mut NewShortcut) -> Option<ShortCut> {
+        if let Some(_) = new_shortcut.action {
+            if let Some(_) = new_shortcut.key {
+                if !new_shortcut.modifiers.is_none() {
+                    let new_sct = ShortCut::new(new_shortcut.modifiers, new_shortcut.key.unwrap(), new_shortcut.description.clone(), new_shortcut.action.unwrap());
+                    for sc in self.vec.iter() {
+                        if sc.shortcut.eq(&new_sct.shortcut) {
+                            return None;
+                        }
+                    }
+                    self.vec.push(new_sct.clone());
+                    Some(new_sct.clone())
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        } 
+    }
+
+    pub fn remove_shortcut(&mut self, shortcut: &mut ShortCut) {
+        let mut index = 0;
+        for (i, sc) in self.vec.iter().enumerate() {
+            if sc.shortcut.eq(&shortcut.shortcut) {
+                index = i;
+            }
+        }
+        self.vec.remove(index);
     }
 }
