@@ -140,7 +140,6 @@ impl AppUtility {
             Action::Modify => {
                 self.modification = true;
             }
-            Action::Modify => {}
             Action::NewScreenshot => {
                 self.hide = false;
                 self.view_image = false;
@@ -252,7 +251,7 @@ impl App for AppUtility {
                 ..Default::default()
             })
             .anchor(egui::Align2::CENTER_TOP, [0.0, 30.0]) // Center the window
-            .default_size(egui::vec2(320.0, 50.0))
+            .default_size(egui::vec2(200.0, 30.0))
             .resizable(false)
             .open(&mut (!self.view_image && !self.selecting_area && !self.show_settings))
             .show(ctx, |ui| {
@@ -285,6 +284,8 @@ impl App for AppUtility {
                                 println!("Capture clicked");
                                 self.make_action(Action::Capture, ctx, frame);
                             }
+
+                            ui.add_space(10.0);
                             if custom_button(
                                 ui,
                                 "⛶  Area shot",
@@ -298,6 +299,7 @@ impl App for AppUtility {
                                 println!("You want an area shot?");
                             }
 
+                            ui.add_space(10.0);
                             if custom_button(
                                 ui,
                                 "🔧  SETTINGS",
@@ -310,6 +312,7 @@ impl App for AppUtility {
                                 self.make_action(Action::Settings, ctx, frame);
                             }
 
+                            ui.add_space(10.0);
                             if circular_button(
                                 ui,
                                 " x ",
@@ -327,7 +330,7 @@ impl App for AppUtility {
                 )
             });
 
-        Window::new("screenshot_taken menu_bar")
+        Window::new("screenshot_taken toolbar")
         //TODO: QUI BISOGNA INSERIRE I BOTTONI DI MODIFICA, DI COPIA ECC...
             .title_bar(false)
             .open(&mut self.view_image.clone())
@@ -338,7 +341,8 @@ impl App for AppUtility {
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .fixed_size([600.0, 50.0])
+            .anchor( egui::Align2::CENTER_TOP, [0.0, 30.0])
+            .fixed_size([600.0, 30.0])
             .resizable(false)
             .show(ctx, |ui| {
                 ui.with_layout(
@@ -725,10 +729,8 @@ impl App for AppUtility {
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .default_rect(egui::Rect::from_center_size(
-                egui::Pos2::new(frame.info().window_info.size.x / 2.0, 30.0),
-                egui::Vec2::new(300.0, 30.0),
-            ))
+            .anchor(egui::Align2::CENTER_TOP, [0.0, 30.0]) // Center the window
+            .default_size(egui::vec2(200.0, 30.0))
             .resizable(false)
             .open(&mut self.selecting_area.clone())
             .show(ctx, |ui| {
@@ -755,7 +757,6 @@ impl App for AppUtility {
                         }
 
                         ui.add_space(10.0);
-
                         if custom_button(
                             ui,
                             " ⟲  HomePage  ",
@@ -917,7 +918,7 @@ fn custom_button_with_font_size(
         .size(font_size)
         .strong();
 
-    let button_size = egui::vec2(text.len() as f32 * 10.0, font_size);
+    let button_size = egui::vec2(text.len() as f32 * 8.0, font_size);
 
     // Create and add the button to the UI
     let button = egui::Button::new(rich_text).fill(bg_color).rounding(10.0);
@@ -937,7 +938,7 @@ fn custom_button(
     text_color: Color32,
     bg_color: Color32,
 ) -> egui::Response {
-    custom_button_with_font_size(ui, text, text_color, bg_color, 20.0)
+    custom_button_with_font_size(ui, text, text_color, bg_color, 13.0)
 }
 
 fn circular_button(
