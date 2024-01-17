@@ -57,6 +57,10 @@ impl ShortCut {
             None
         }
     }
+
+    fn toggle_active(&mut self) {
+        self.active = !self.active;
+    }
 }
 
 pub struct AllShortcuts {
@@ -67,12 +71,12 @@ pub struct AllShortcuts {
 impl AllShortcuts {
     pub fn default() -> Self {
         let mut vec = Vec::new();
-        vec.push(ShortCut::new(Modifiers::CTRL, Key::C, "Copy to clipboard".to_string(), Action::Copy));
-        vec.push(ShortCut::new(Modifiers::CTRL, Key::H, "Go to the home page".to_string(), Action::HomePage));
-        vec.push(ShortCut::new(Modifiers::CTRL, Key::N, "Take a new screenshot".to_string(), Action::NewScreenshot));
-        vec.push(ShortCut::new(Modifiers::CTRL, Key::S, "Save".to_string(), Action::Save));
-        vec.push(ShortCut::new(Modifiers::CTRL, Key::W, "Close the application".to_string(), Action::Close));
-        vec.push(ShortCut::new(Modifiers::CTRL, Key::Z, "Undo".to_string(), Action::Undo));
+        vec.push(ShortCut::new(Modifiers::COMMAND, Key::C, "Copy to clipboard".to_string(), Action::Copy));
+        vec.push(ShortCut::new(Modifiers::COMMAND, Key::H, "Go to the home page".to_string(), Action::HomePage));
+        vec.push(ShortCut::new(Modifiers::COMMAND, Key::N, "Take a new screenshot".to_string(), Action::NewScreenshot));
+        vec.push(ShortCut::new(Modifiers::COMMAND, Key::S, "Save".to_string(), Action::Save));
+        vec.push(ShortCut::new(Modifiers::COMMAND, Key::W, "Close the application".to_string(), Action::Close));
+        vec.push(ShortCut::new(Modifiers::COMMAND, Key::Z, "Undo".to_string(), Action::Undo));
         Self {
             vec,
             show: false,
@@ -119,7 +123,7 @@ impl AllShortcuts {
             }
         } else {
             None
-        } 
+        }
     }
 
     pub fn remove_shortcut(&mut self, shortcut: &mut ShortCut) {
@@ -130,5 +134,13 @@ impl AllShortcuts {
             }
         }
         self.vec.remove(index);
+    }
+
+    pub fn toggle_active(&mut self, shortcut: &mut ShortCut) {
+        for sc in self.vec.iter_mut() {
+            if sc.shortcut.eq(&shortcut.shortcut) {
+                sc.toggle_active();
+            }
+        }
     }
 }
