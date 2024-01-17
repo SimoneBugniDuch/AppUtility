@@ -334,7 +334,7 @@ impl App for AppUtility {
                                 egui::Color32::YELLOW)
                             .on_hover_text("Take a screenshot after a delay")
                             .clicked() {
-                                self.make_action(Action::ManageTimer, ctx, frame);
+                                self.make_action(Action::SetTimer, ctx, frame);
                             }
 
                             if self.timer.form_opened() {
