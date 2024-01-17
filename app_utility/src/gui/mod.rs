@@ -25,15 +25,15 @@ struct AppUtility {
     hide: bool,
     modification: bool,
     modifications_vector: Vec<Modifier>,
-    modifier: Modifier,
     modified_element: ModifiedElement,
+    modifier: Modifier,
     new_shortcut: NewShortcut,
     rectangle: Rectangle,
-    selection_mode: Selection,
     screenshots: Screenshots,
     selecting_area: bool,
-    show_settings: bool,
+    selection_mode: Selection,
     shortcuts: AllShortcuts,
+    show_settings: bool,
     texture: Option<TextureHandle>,
     timer: Timer,
     view_image: bool,
@@ -77,27 +77,14 @@ impl AppUtility {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
         cc.egui_ctx.set_visuals(Visuals::light());
         Self {
-            rectangle: Rectangle {
-                x: 0.0,
-                y: 0.0,
-                width: 0.0,
-                height: 0.0,
-            },
-            default_path: "screenshot".to_string(),
-            new_shortcut: NewShortcut::default(),
+            buffer: None,
             default_name: build_default_name(),
             default_name_selected: true,
             default_number: 0,
+            default_path: "screenshot".to_string(),
             hide: false,
-            selection_mode: Selection::Fullscreen,
-            selecting_area: false,
-            screenshots: Screenshots::new(),
-            buffer: None,
-            view_image: false,
-            texture: None,
-            show_settings: false,
-            shortcuts: AllShortcuts::default(),
             modification: false,
+            modifications_vector: Default::default(),
             modifier: Modifier::NotSelected,
             modified_element: ModifiedElement {
                 stroke: egui::Stroke::new(1.0, egui::Color32::BLACK),
@@ -108,8 +95,16 @@ impl AppUtility {
                 line: Default::default(),
                 text: "Example".to_owned(),
             },
-            modifications_vector: Default::default(),
+            new_shortcut: NewShortcut::default(),
+            rectangle: Rectangle { x: 0.0, y: 0.0, width: 0.0, height: 0.0 },
+            screenshots: Screenshots::new(),
+            selecting_area: false,
+            selection_mode: Selection::Fullscreen,
+            shortcuts: AllShortcuts::default(),
+            show_settings: false,
+            texture: None,
             timer: Timer::new(),
+            view_image: false,
         }
     }
 
@@ -144,8 +139,9 @@ impl AppUtility {
                 if now.duration_since(self.timer.start_instant.unwrap()).as_secs_f32() >= 1.0 {
                     self.timer.decrement_timer();
                     if self.timer.seconds == 0 {
-                        self.hide = true;
                         self.timer.reset_timer();
+                        self.hide = true;
+                        frame.set_visible(false);
                     }
                     self.timer.start_instant = Some(now);
                 }
@@ -222,7 +218,8 @@ impl AppUtility {
                 if self.timer.seconds > 0 {
                     self.timer.start_timer();
                 } else {
-                    self.make_action(Action::SetTimer, ctx, frame);
+                    // self.make_action(Action::SetTimer, ctx, frame);
+                    self.make_action(Action::Capture, ctx, frame);
                 }
             }
             Action::Undo => {}
@@ -280,7 +277,7 @@ impl App for AppUtility {
             .default_pos(calc_center_position(ctx, 500.0, 20.0))
             .default_size(egui::vec2(250.0, 30.0))
             .resizable(false)
-            .open(&mut (!self.view_image && !self.selecting_area && !self.show_settings))
+            .open(&mut (!self.view_image && !self.selecting_area && !self.show_settings && !self.timer.form_opened() && !self.timer.is_running()))
             .show(ctx, |ui| {
                 ui.with_layout(
                     Layout {
@@ -298,6 +295,10 @@ impl App for AppUtility {
                         }
 
                         if !self.view_image {
+                            // if self.timer.is_running() {
+                            //     self.make_action(Action::ManageTimer, ctx, frame);                               
+                            // }
+
                             if custom_button(
                                 ui,
                                 "📷  Fullscreen shot",
@@ -309,7 +310,7 @@ impl App for AppUtility {
                             {
                                 self.make_action(Action::SelectFullscreen, ctx, frame);
                                 println!("Capture clicked");
-                                self.make_action(Action::Capture, ctx, frame);
+                                self.make_action(Action::StartTimer, ctx, frame);
                             }
 
                             ui.add_space(10.0);
@@ -336,27 +337,7 @@ impl App for AppUtility {
                             .clicked() {
                                 self.make_action(Action::SetTimer, ctx, frame);
                             }
-
-                            if self.timer.form_opened() {
-                                ui.label("Timer (in seconds)");
-                                ui.add(egui::DragValue::new(&mut self.timer.seconds).clamp_range(0..=60));
-
-                                if custom_button(ui, "Start timer", egui::Color32::DARK_GRAY, egui::Color32::YELLOW).clicked() {
-                                    self.make_action(Action::StartTimer, ctx, frame);
-                                }
-
-                                if custom_button(ui, "Cancel", egui::Color32::DARK_GRAY, egui::Color32::YELLOW).clicked() {
-                                    self.make_action(Action::ResetTimer, ctx, frame);
-                                }
-                            }
-
-                            if self.timer.is_running() {
-                                self.make_action(Action::ManageTimer, ctx, frame);
-
-                                if custom_button(ui, "Cancel", egui::Color32::DARK_GRAY, egui::Color32::YELLOW).clicked() {
-                                    self.make_action(Action::ResetTimer, ctx, frame);
-                                }                                
-                            }
+                            ui.label(format!("Actual delay: {}", self.timer.seconds));
 
                             ui.add_space(10.0);
                             if custom_button(
@@ -810,7 +791,7 @@ impl App for AppUtility {
             .default_size(egui::vec2(200.0, 30.0))
             .default_pos(calc_center_position(ctx, 300.0, 30.0))
             .resizable(false)
-            .open(&mut self.selecting_area.clone())
+            .open(&mut (self.selecting_area.clone() && !self.timer.form_opened() && !self.timer.is_running()))
             .show(ctx, |ui| {
                 ui.with_layout(
                     Layout {
@@ -831,8 +812,20 @@ impl App for AppUtility {
                         .on_hover_text("Capture the area screenshot!")
                         .clicked()
                         {
-                            self.make_action(Action::Capture, ctx, frame);
+                            self.make_action(Action::StartTimer, ctx, frame);
                         }
+
+                        ui.add_space(10.0);
+                        if custom_button(
+                            ui, 
+                            "TIMER", 
+                            egui::Color32::DARK_GRAY, 
+                            egui::Color32::YELLOW)
+                        .on_hover_text("Take a screenshot after a delay")
+                        .clicked() {
+                            self.make_action(Action::SetTimer, ctx, frame);
+                        }
+                        ui.label(format!("Actual delay: {}", self.timer.seconds));
 
                         ui.add_space(10.0);
                         if custom_button(
@@ -894,8 +887,7 @@ impl App for AppUtility {
             }
         }
 
-        
-        Window::new("settings_page")
+        Window::new("Settings")
             .open(&mut self.show_settings)
             .frame(egui::Frame {
                 fill: egui::Color32::LIGHT_GRAY,
@@ -975,6 +967,53 @@ impl App for AppUtility {
                     }
                 });
                 // End of shortcuts settings window
+            });
+
+        Window::new("Timer form")
+            .title_bar(false)
+            .open(&mut self.timer.form_opened())
+            .movable(true)
+            .resizable(false)
+            .frame(egui::Frame {
+                fill: egui::Color32::LIGHT_GRAY,
+                stroke: egui::Stroke::new(0.5, egui::Color32::DARK_GRAY),
+                inner_margin: egui::style::Margin::same(15.0),
+                rounding: egui::Rounding::same(20.0),
+                ..Default::default()
+            })
+            .default_pos(calc_center_position(ctx, 800.0, 100.0))
+            .show(ctx, |ui| {
+                ui.label("Timer (in seconds)");
+                ui.add(egui::DragValue::new(&mut self.timer.seconds).clamp_range(0..=60));
+
+                if custom_button(ui, "Save changes",egui::Color32::DARK_GRAY, egui::Color32::YELLOW).clicked() {
+                    self.timer.close_form();
+                }
+
+                if custom_button(ui, "Reset", egui::Color32::DARK_GRAY, egui::Color32::YELLOW).clicked() {
+                    self.make_action(Action::ResetTimer, ctx, frame);
+                }
+            });
+
+        Window::new("Timer running")
+            .title_bar(false)
+            .open(&mut (self.timer.is_running() && !self.hide))
+            .movable(false)
+            .resizable(false)
+            .default_size(egui::vec2(100.0, 100.0))
+            .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+            .frame(egui::Frame {
+                fill: egui::Color32::TRANSPARENT,
+                ..Default::default()
+            })
+            .show(ctx, |ui| {
+                ui.label(egui::RichText::new(self.timer.seconds.to_string()).size(30.0).color(egui::Color32::GOLD));
+                if self.timer.is_running() {
+                    self.make_action(Action::ManageTimer, ctx, frame);                               
+                }
+                if custom_button(ui, "Cancel", egui::Color32::DARK_GRAY, egui::Color32::YELLOW).clicked() {
+                    self.make_action(Action::ResetTimer, ctx, frame);
+                } 
             });
     }
 }
