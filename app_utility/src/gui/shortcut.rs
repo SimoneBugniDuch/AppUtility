@@ -57,6 +57,10 @@ impl ShortCut {
             None
         }
     }
+
+    fn toggle_active(&mut self) {
+        self.active = !self.active;
+    }
 }
 
 pub struct AllShortcuts {
@@ -119,7 +123,7 @@ impl AllShortcuts {
             }
         } else {
             None
-        } 
+        }
     }
 
     pub fn remove_shortcut(&mut self, shortcut: &mut ShortCut) {
@@ -130,5 +134,13 @@ impl AllShortcuts {
             }
         }
         self.vec.remove(index);
+    }
+
+    pub fn toggle_active(&mut self, shortcut: &mut ShortCut) {
+        for sc in self.vec.iter_mut() {
+            if sc.shortcut.eq(&shortcut.shortcut) {
+                sc.toggle_active();
+            }
+        }
     }
 }

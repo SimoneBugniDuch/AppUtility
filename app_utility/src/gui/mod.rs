@@ -138,7 +138,6 @@ impl AppUtility {
             Action::Modify => {
                 self.modification = true;
             }
-            Action::Modify => {}
             Action::NewScreenshot => {
                 self.hide = false;
                 self.view_image = false;
