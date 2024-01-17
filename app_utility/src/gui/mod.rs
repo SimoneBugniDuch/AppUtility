@@ -33,6 +33,10 @@ struct AppUtility {
     selecting_area: bool,
     show_settings: bool,
     shortcuts: AllShortcuts,
+    modification: bool,
+    modifier: Modifier,
+    modified_element: ModifiedElement, 
+    modifications_vector: Vec<Modifier>,
 }
 
 struct Rectangle {
@@ -45,6 +49,27 @@ struct Rectangle {
 enum Selection {
     Fullscreen,
     Area,
+}
+
+#[derive(PartialEq, Debug)]
+enum Modifier {
+    NotSelected,
+    Pen,
+    Rect,
+    Arrow,
+    Text,
+    Crop,
+    Line,
+    Circle,
+}
+
+struct ModifiedElement {
+    pen: Vec<Vec<(egui::Pos2, egui::Stroke)>>,
+    rect: Vec<Vec<(egui::Pos2, egui::Stroke)>>,
+    circle: Vec<Vec<(egui::Pos2, egui::Stroke)>>,
+    arrow: Vec<Vec<(egui::Pos2, egui::Stroke)>>,
+    line: Vec<Vec<(egui::Pos2, egui::Stroke)>>,
+    text: String,
 }
 
 impl AppUtility {
@@ -71,6 +96,17 @@ impl AppUtility {
             texture: None,
             show_settings: false,
             shortcuts: AllShortcuts::default(),
+            modification: false,
+            modifier: Modifier::NotSelected,
+            modified_element: ModifiedElement{
+                pen: Default::default(),
+                rect: Default::default(),
+                circle: Default::default(),
+                arrow: Default::default(),
+                line: Default::default(),
+                text: "Example".to_owned(),
+            },
+            modifications_vector: Default::default(),
         }
     }
 
@@ -99,7 +135,9 @@ impl AppUtility {
                 self.view_image = false;
                 self.show_settings = false;
             }
-            Action::Modify => {}
+            Action::Modify => {
+                self.modification = true;
+            }
             Action::NewScreenshot => {
                 self.hide = false;
                 self.view_image = false;
@@ -315,7 +353,7 @@ impl App for AppUtility {
                             None => {},
                         }
 
-                        if self.view_image {
+                        if self.view_image && !self.modification {
                             println!("Now I'm seeing the image");
                             if custom_button(ui, "Modify", Color32::BLACK, Color32::GRAY).clicked() {
                                 self.make_action(Action::Modify, ctx, frame);
@@ -338,6 +376,63 @@ impl App for AppUtility {
                             .clicked()
                             {
                                 self.make_action(Action::Close, ctx, frame);
+                            }
+                        }else{
+                            if ui.button(" 🖊  ").on_hover_text("Draw").clicked() {
+                                //fare la modifica effettiva
+                                self.modifier = Modifier::Pen;
+                            }
+                            if ui.button("  /  ").on_hover_text("Draw a line").clicked() {
+                                //fare la modifica effettiva
+                                self.modifier = Modifier::Line;
+                            }
+                            if ui.button("  ↖  ").on_hover_text("Draw an arrow").clicked() {
+                                //fare la modifica effettiva
+                                self.modifier = Modifier::Arrow;
+                            }
+                            if ui.button("  ☐  ").on_hover_text("Draw a rectangle").clicked() {
+                                //fare la modifica effettiva
+                                self.modifier = Modifier::Rect;
+                            }
+                            if ui.button("  ⭕  ").on_hover_text("Draw a circle").clicked() {
+                                //fare la modifica effettiva
+                                self.modifier = Modifier::Circle;
+                            }
+                            if ui.button("  Text  ").on_hover_text("Write a text").clicked() {
+                                //fare la modifica effettiva
+                                self.modifier = Modifier::Text;
+                            }
+                            if self.modifier == Modifier::Text {
+                                egui::ScrollArea::vertical().min_scrolled_height(30.0).show(
+                                    ui,
+                                    |ui| {
+                                        ui.add(
+                                            egui::TextEdit::multiline(
+                                                &mut self.modified_element.text,
+                                            )
+                                            .desired_rows(1)
+                                            .desired_width(500.0),
+                                        );
+                                    },
+                                );
+
+                                if ui.button("  Save text  ").clicked() {
+                                    self.modifications_vector.push(Modifier::Text);
+                                };
+                            }
+                            if ui.button("  ⛶  ").on_hover_text("Crop").clicked() {
+                                //fare la modifica effettiva
+                                self.modifier = Modifier::Crop;
+                            }
+                            if self.modifier == Modifier::Crop{
+                                if ui.button("  Save crop  ").clicked(){
+                                    self.modifier = Modifier::NotSelected;
+                                    self.hide = true;
+                                }
+                            }
+                           
+                            if ui.button("  ⟲  ").on_hover_text("undo").clicked() {
+                                self.make_action(Action::Undo, ctx, frame);
                             }
                         }
                     },
@@ -377,6 +472,28 @@ impl App for AppUtility {
                     Color32::WHITE,
                 );
                 println!("I'm viewing the image!!");
+                //qua vedo e salvo le modifiche che sto effettuando dopo aver schiacciato il bottone
+                if self.modification{
+                    match self.modifier {
+                        Modifier::NotSelected => {}
+                        Modifier::Pen => {
+                            //azione
+                        }
+                        Modifier::Rect => {
+                            //azione
+                        }
+                        Modifier::Arrow => {
+                            //azione
+                        }
+                        Modifier::Line => {
+                            //azione
+                        }
+                        Modifier::Circle => {
+                            //azione
+                        }
+                        _ => {}
+                    }
+                }
             });
 
         Window::new("Window when selecting area")
