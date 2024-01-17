@@ -1,3 +1,4 @@
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Action {
     Capture,
     Copy,
@@ -26,6 +27,22 @@ impl Action {
             Action::SelectFullscreen => String::from("SelectFullscreen"),
             Action::Settings => String::from("Settings"),
             Action::Undo => String::from("Undo"),
+        }
+    }
+
+    pub fn can_be_performed_during_image_view(&self) -> bool {
+        match self {
+            Action::Capture => false,
+            Action::Close => true,
+            Action::Copy => true,
+            Action::HomePage => false,
+            Action::Modify => true,
+            Action::NewScreenshot => true,
+            Action::Save => true,
+            Action::SelectArea => false,
+            Action::SelectFullscreen => false,
+            Action::Settings => false,
+            Action::Undo => true,
         }
     }
 }
