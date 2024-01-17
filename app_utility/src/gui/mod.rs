@@ -64,6 +64,7 @@ enum Modifier {
 }
 
 struct ModifiedElement {
+    stroke: egui::Stroke,
     pen: Vec<Vec<(egui::Pos2, egui::Stroke)>>,
     rect: Vec<Vec<(egui::Pos2, egui::Stroke)>>,
     circle: Vec<Vec<(egui::Pos2, egui::Stroke)>>,
@@ -99,6 +100,7 @@ impl AppUtility {
             modification: false,
             modifier: Modifier::NotSelected,
             modified_element: ModifiedElement{
+                stroke: egui::Stroke::new(1.0, egui::Color32::BLACK),
                 pen: Default::default(),
                 rect: Default::default(),
                 circle: Default::default(),
@@ -435,6 +437,9 @@ impl App for AppUtility {
                             if ui.button("  ⟲  ").on_hover_text("undo").clicked() {
                                 self.make_action(Action::Undo, ctx, frame);
                             }
+                            if ui.button("  X  ").on_hover_text("Close").clicked() {
+                                self.modification = false;
+                            }
                         }
                     },
                 )
@@ -479,22 +484,236 @@ impl App for AppUtility {
                         Modifier::NotSelected => {}
                         Modifier::Pen => {
                             //azione
+                            response.clone().on_hover_cursor(egui::output::CursorIcon::PointingHand);
+                            if self.modified_element.pen.is_empty() {
+                                self.modified_element.pen.push(vec![]);
+                            }
+                            let current_line = self.modified_element.pen.last_mut().unwrap();
+
+                            if let Some(pointer_pos) = response.interact_pointer_pos() {
+                                if current_line.last()
+                                    != Some(&(pointer_pos, self.modified_element.stroke))
+                                {
+                                    current_line
+                                        .push((pointer_pos, self.modified_element.stroke));
+                                    response.mark_changed();
+                                }
+                            } else if !current_line.is_empty() {
+                                self.modified_element.pen.push(vec![]);
+                                response.mark_changed();
+                                self.modifications_vector.push(Modifier::Pen);
+                            }
                         }
                         Modifier::Rect => {
                             //azione
+                            response.clone().on_hover_cursor(egui::output::CursorIcon::Crosshair);
+                            if self.modified_element.rect.is_empty() {
+                                self.modified_element.rect.push(vec![]);
+                            }
+                            let current_line = self.modified_element.rect.last_mut().unwrap();
+
+                            if let Some(pointer_pos) = response.interact_pointer_pos() {
+                                if current_line.last()
+                                    != Some(&(pointer_pos, self.modified_element.stroke))
+                                {
+                                    current_line
+                                        .push((pointer_pos, self.modified_element.stroke));
+                                    response.mark_changed();
+                                }
+                            } else if !current_line.is_empty() {
+                                self.modified_element.rect.push(vec![]);
+                                response.mark_changed();
+                                self.modifications_vector.push(Modifier::Rect);
+                            }
                         }
                         Modifier::Arrow => {
                             //azione
+                            response.clone().on_hover_cursor(egui::output::CursorIcon::Crosshair);
+                            if self.modified_element.arrow.is_empty() {
+                                self.modified_element.arrow.push(vec![]);
+                            }
+                            let current_line = self.modified_element.arrow.last_mut().unwrap();
+
+                            if let Some(pointer_pos) = response.interact_pointer_pos() {
+                                if current_line.last()
+                                    != Some(&(pointer_pos, self.modified_element.stroke))
+                                {
+                                    current_line
+                                        .push((pointer_pos, self.modified_element.stroke));
+                                    response.mark_changed();
+                                }
+                            } else if !current_line.is_empty() {
+                                self.modified_element.arrow.push(vec![]);
+                                response.mark_changed();
+                                self.modifications_vector.push(Modifier::Arrow);
+                            }
                         }
                         Modifier::Line => {
                             //azione
+                            response.clone().on_hover_cursor(egui::output::CursorIcon::Crosshair);
+                            if self.modified_element.line.is_empty() {
+                                self.modified_element.line.push(vec![]);
+                            }
+
+                            let current_line = self.modified_element.line.last_mut().unwrap();
+
+                            if let Some(pointer_pos) = response.interact_pointer_pos() {
+                                if current_line.last()
+                                    != Some(&(pointer_pos, self.modified_element.stroke))
+                                {
+                                    current_line
+                                        .push((pointer_pos, self.modified_element.stroke));
+                                    response.mark_changed();
+                                }
+                            } else if !current_line.is_empty() {
+                                self.modified_element.line.push(vec![]);
+                                response.mark_changed();
+                                self.modifications_vector.push(Modifier::Line);
+                            }
                         }
                         Modifier::Circle => {
                             //azione
+                            response.clone().on_hover_cursor(egui::output::CursorIcon::Crosshair);
+                            if self.modified_element.circle.is_empty() {
+                                self.modified_element.circle.push(vec![]);
+                            }
+                            let current_line = self.modified_element.circle.last_mut().unwrap();
+
+                            if let Some(pointer_pos) = response.interact_pointer_pos() {
+                                if current_line.last()
+                                    != Some(&(pointer_pos, self.modified_element.stroke))
+                                {
+                                    current_line
+                                        .push((pointer_pos, self.modified_element.stroke));
+                                    response.mark_changed();
+                                }
+                            } else if !current_line.is_empty() {
+                                self.modified_element.circle.push(vec![]);
+                                response.mark_changed();
+                                self.modifications_vector.push(Modifier::Circle);
+                            }
                         }
+                        Modifier::Text => {
+                            //azione
+                            let res = egui::Area::new("text")
+                                .movable(true)
+                                .default_pos(egui::Pos2::new(
+                                    (frame.info().window_info.size[0] - 20.0) / 2.0,
+                                    (frame.info().window_info.size[1] - 20.0) / 2.0,
+                                ))
+                                .drag_bounds(egui::Rect::from_center_size(
+                                    egui::Pos2::new(
+                                        (frame.info().window_info.size[0]) / 2.0,
+                                        (frame.info().window_info.size[1]) / 2.0,
+                                    ),
+                                    egui::Vec2::new(dim_img.0, dim_img.1),
+                                ))
+                                .order(egui::layers::Order::Foreground)
+                                .show(ctx, |ui| {
+                                    ui.vertical(|ui| {
+                                        ui.label(
+                                            egui::RichText::new(format!(
+                                                "{}",
+                                                self.modified_element.text,
+                                            ))
+                                            .color(self.modified_element.stroke.color)
+                                            .size(
+                                                self.modified_element.stroke.width * 20.0 + 0.1,
+                                            ),
+                                        );
+                                    });
+                                });
+                        }
+                        Modifier::Crop => {
+                            let area = egui::Window::new("crop_area")
+                                .title_bar(false)
+                                .default_size(egui::vec2(320.0, 240.0))
+                                .resizable(true)
+                                .movable(true)
+                                .resize(|r| r.min_size(egui::vec2(1.0, 1.0)))
+                                .resize(|r| r.max_size(egui::vec2(dim_img.0, dim_img.1)))
+                                .default_pos(egui::Pos2::new(
+                                    (frame.info().window_info.size[0] - 320.0) / 2.0,
+                                    (frame.info().window_info.size[1] - 240.0) / 2.0,
+                                ))
+                                .drag_bounds(egui::Rect::from_center_size(
+                                    egui::Pos2::new(
+                                        (frame.info().window_info.size[0]) / 2.0,
+                                        (frame.info().window_info.size[1]) / 2.0,
+                                    ),
+                                    egui::Vec2::new(dim_img.0, dim_img.1),
+                                ))
+                                .frame(egui::Frame {
+                                    stroke: egui::Stroke::new(1.5, egui::Color32::WHITE),
+                                    shadow: egui::epaint::Shadow::small_light(),
+                                    ..Default::default()
+                                })
+                                .show(ctx, |ui| {
+                                    ui.allocate_space(ui.available_size());
+                                });
+
+                            let rectangle = area.unwrap().response.rect;
+                            let mut adj = 1.0;
+                            if cfg!(target_os = "windows") {
+                                adj = frame.info().native_pixels_per_point.unwrap();
+                            } 
+                            self.rectangle = Rectangle {
+                                x: (rectangle.left()) * adj,
+                                y: (rectangle.top()) * adj,
+                                width: rectangle.width() * adj,
+                                height: rectangle.height() * adj,
+                            };
+                        }
+
                         _ => {}
                     }
                 }
+                let pen = self.modified_element.pen
+                    .iter().filter(|line| line.len() >= 2)
+                    .map(|line| {
+                        let points: Vec<egui::Pos2> = line.iter().map(|p| p.0).collect();
+                        let stroke = line[0].1;
+                        egui::Shape::line(points, stroke)
+                    });
+                let rect = self.modified_element.rect
+                    .iter()
+                    .filter(|line| line.len() >= 2)
+                    .map(|line| {
+                        let rect = egui::Rect::from_two_pos(
+                            line.first().unwrap().0,
+                            line.last().unwrap().0,
+                        );
+                        egui::Shape::rect_stroke(rect, egui::Rounding::none(), line[0].1)
+                    });
+                let circle = self.modified_element.circle
+                    .iter()
+                    .filter(|line| line.len() >= 2)
+                    .map(|line| {
+                        egui::Shape::circle_stroke(
+                            line.first().unwrap().0,
+                            line.first().unwrap().0.distance(line.last().unwrap().0),
+                            line[0].1,
+                        )
+                    });
+                let line = self.modified_element.line
+                    .iter()
+                    .filter(|line| line.len() >= 2)
+                    .map(|line| {
+                        let vec = [line.first().unwrap().0, line.last().unwrap().0];
+                        egui::Shape::line_segment(vec, line[0].1)
+                    });
+
+                for element in self.modified_element.arrow.clone() {
+                    if element.first().is_some() && element.last().is_some() {
+                        let line = element.first().unwrap().0 - element.last().unwrap().0;
+                        painter.arrow(element.first().unwrap().0, -line, element[0].1);
+                    }
+                }
+
+                painter.extend(pen);
+                painter.extend(line);
+                painter.extend(rect);
+                painter.extend(circle);
             });
 
         Window::new("screenshot_area menu_bar")
