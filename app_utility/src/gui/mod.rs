@@ -195,10 +195,8 @@ impl App for AppUtility {
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .default_rect(egui::Rect::from_center_size(
-                egui::Pos2::new(frame.info().window_info.size.x / 2.0 - 316.0, 30.0),
-                egui::Vec2::new(316.0, 30.0),
-            ))
+            .anchor(egui::Align2::CENTER_TOP, [0.0, 30.0]) // Center the window
+            .default_size(egui::vec2(320.0, 50.0))
             .resizable(false)
             .open(&mut (!self.view_image && !self.selecting_area && !self.show_settings))
             .show(ctx, |ui| {
@@ -356,7 +354,7 @@ impl App for AppUtility {
                 println!("I'm viewing the image!!");
             });
 
-        Window::new("Window when selecting area")
+        Window::new("Selection area menu bar")
             .title_bar(false)
             .frame(egui::Frame {
                 fill: egui::Color32::LIGHT_GRAY,
@@ -456,7 +454,71 @@ impl App for AppUtility {
             .show(ctx, |ui| {
                 ui.label("Settings");
                 ui.separator();
-                ui.label("Default path");
+                ui.add_space(10.0);
+                egui::Grid::new("shortcut_grid")
+                    .spacing([170.0, 5.0])
+                    .striped(true)
+                    .show(ui, |ui| {
+                        ui.label("Shortcut Name");
+                        ui.label("Description");
+                        ui.label("Keyboard combination");
+                        ui.end_row();
+
+                        for shortcut in &mut self.shortcuts.vec {
+                            let shortcut::ShortCut {
+                                name,
+                                description,
+                                shortcut,
+                                ..
+                            } = shortcut;
+
+                            // Calculate width based on text length plus padding
+                            let name_width = 100.0;
+                            let description_width = 300.0;
+
+                            ui.add_sized([name_width, 0.0], egui::TextEdit::singleline(name));
+                            ui.add_sized(
+                                [description_width, 0.0],
+                                egui::TextEdit::singleline(description),
+                            );
+                            ui.add_sized(
+                                [name_width, 0.0],
+                                egui::TextEdit::singleline(&mut ctx.format_shortcut(shortcut)),
+                            );
+
+                            ui.end_row();
+                        }
+                    });
+
+                // Buttons for saving and discarding changes
+                ui.add_space(20.0);
+                ui.horizontal(|ui| {
+                    
+                    if custom_button_with_font_size(
+                        ui,
+                        "Save all changes",
+                        egui::Color32::DARK_GRAY,
+                        egui::Color32::from_rgb(229, 224, 255),
+                        10.0,
+                    )
+                    .clicked()
+                    {
+                        // Implement logic to discard changes and revert to original shortcuts
+                    }
+                    ui.add_space(10.0);
+                    if custom_button_with_font_size(
+                        ui,
+                        " Discard all changes",
+                        egui::Color32::DARK_GRAY,
+                        egui::Color32::from_rgb(229, 224, 255),
+                        10.0,
+                    )
+                    .clicked()
+                    {
+                        // Implement logic to discard changes and revert to original shortcuts
+                    }
+                });
+                // End of shortcuts settings window
             });
     }
 }
@@ -493,6 +555,16 @@ fn custom_button(
     response
 }
 
+// Version without font_size
+fn custom_button(
+    ui: &mut egui::Ui,
+    text: &str,
+    text_color: Color32,
+    bg_color: Color32,
+) -> egui::Response {
+    custom_button_with_font_size(ui, text, text_color, bg_color, 20.0)
+}
+
 fn circular_button(
     ui: &mut egui::Ui,
     text: &str,
@@ -507,7 +579,7 @@ fn circular_button(
         ui.painter().circle_filled(rect.center(), radius, bg_color);
 
         // Create a FontId with the specified font size
-        let font_id = egui::FontId::new(20.0, egui::FontFamily::Proportional);
+        let font_id = egui::FontId::new(13.0, egui::FontFamily::Proportional);
 
         ui.painter().text(
             rect.center(),
