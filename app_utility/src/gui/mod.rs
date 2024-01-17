@@ -335,15 +335,15 @@ impl App for AppUtility {
                                 self.make_action(Action::ManageTimer, ctx, frame);
                             }
 
-                            if self.timer.form_open() {
+                            if self.timer.form_opened() {
                                 ui.label("Timer (in seconds)");
                                 ui.add(egui::DragValue::new(&mut self.timer.seconds).clamp_range(0..=60));
 
-                                if custom_button(ui, "Start timer", egui::Color32::DARK_GRAY, egui::Color32::YELLOW) {
+                                if custom_button(ui, "Start timer", egui::Color32::DARK_GRAY, egui::Color32::YELLOW).clicked() {
                                     self.make_action(Action::StartTimer, ctx, frame);
                                 }
 
-                                if custom_button(ui, "Cancel", egui::Color32::DARK_GRAY, egui::Color32::YELLOW) {
+                                if custom_button(ui, "Cancel", egui::Color32::DARK_GRAY, egui::Color32::YELLOW).clicked() {
                                     self.make_action(Action::ResetTimer, ctx, frame);
                                 }
                             }
@@ -351,7 +351,7 @@ impl App for AppUtility {
                             if self.timer.is_running() {
                                 self.make_action(Action::ManageTimer, ctx, frame);
 
-                                if custom_button(ui, "Cancel", egui::Color32::DARK_GRAY, egui::Color32::YELLOW) {
+                                if custom_button(ui, "Cancel", egui::Color32::DARK_GRAY, egui::Color32::YELLOW).clicked() {
                                     self.make_action(Action::ResetTimer, ctx, frame);
                                 }                                
                             }
