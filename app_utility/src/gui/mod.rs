@@ -1,8 +1,9 @@
 mod actions;
 mod screenshots;
 mod shortcut;
+mod timer;
 
-use std::{time::Duration, fs, borrow::Cow};
+use std::{time::{Duration, Instant}, fs, borrow::Cow};
 use native_dialog::FileDialog;
 use chrono::Local;
 use eframe::{
@@ -13,30 +14,29 @@ use eframe::{
 use image::{self, load_from_memory, ImageError};
 use arboard::{Clipboard, ImageData};
 
-use self::screenshots::Screenshots;
-use self::shortcut::NewShortcut;
-use self::{actions::Action, shortcut::AllShortcuts};
+use self::{screenshots::Screenshots, timer::Timer, actions::Action, shortcut::{AllShortcuts, NewShortcut}};
 
 struct AppUtility {
-    rectangle: Rectangle,
-    default_path: String,
-    new_shortcut: NewShortcut,
+    buffer: Option<Vec<u8>>,
     default_name: String,
     default_name_selected: bool,
     default_number: usize,
+    default_path: String,
     hide: bool,
+    modification: bool,
+    modifications_vector: Vec<Modifier>,
+    modifier: Modifier,
+    modified_element: ModifiedElement,
+    new_shortcut: NewShortcut,
+    rectangle: Rectangle,
     selection_mode: Selection,
     screenshots: Screenshots,
-    buffer: Option<Vec<u8>>,
-    view_image: bool,
-    texture: Option<TextureHandle>,
     selecting_area: bool,
     show_settings: bool,
     shortcuts: AllShortcuts,
-    modification: bool,
-    modifier: Modifier,
-    modified_element: ModifiedElement, 
-    modifications_vector: Vec<Modifier>,
+    texture: Option<TextureHandle>,
+    timer: Timer,
+    view_image: bool,
 }
 
 struct Rectangle {
@@ -107,6 +107,7 @@ impl AppUtility {
                 text: "Example".to_owned(),
             },
             modifications_vector: Default::default(),
+            timer: Timer::new(),
         }
     }
 
@@ -114,6 +115,7 @@ impl AppUtility {
         match action {
             Action::Capture => {
                 self.hide = true;
+                self.timer.reset_timer();
                 frame.set_visible(false);
             }
             Action::Close => {
@@ -135,6 +137,18 @@ impl AppUtility {
                 self.view_image = false;
                 self.show_settings = false;
             }
+            Action::ManageTimer => {
+                let now = Instant::now();
+                if now.duration_since(self.timer.start_instant.unwrap()).as_secs_f32() >= 1.0 {
+                    self.timer.decrement_timer();
+                    if self.timer.seconds == 0 {
+                        self.hide = true;
+                        self.timer.reset_timer();
+                    }
+                    self.timer.start_instant = Some(now);
+                }
+                ctx.request_repaint();
+            }
             Action::Modify => {
                 self.modification = true;
             }
@@ -144,6 +158,9 @@ impl AppUtility {
                 self.selection_mode = Selection::Fullscreen;
                 self.selecting_area = false;
                 self.show_settings = false;
+            }
+            Action::ResetTimer => {
+                self.timer.reset_timer();
             }
             Action::Save => {
                 let mut filename = build_default_name();
@@ -195,6 +212,16 @@ impl AppUtility {
             }
             Action::Settings => {
                 self.show_settings = true;
+            }
+            Action::SetTimer => {
+                self.timer.open_form();
+            }
+            Action::StartTimer => {
+                if self.timer.seconds > 0 {
+                    self.timer.start_timer();
+                } else {
+                    self.make_action(Action::SetTimer, ctx, frame);
+                }
             }
             Action::Undo => {}
         }
@@ -295,6 +322,38 @@ impl App for AppUtility {
                             {
                                 self.make_action(Action::SelectArea, ctx, frame);
                                 println!("You want an area shot?");
+                            }
+
+                            ui.add_space(10.0);
+                            if custom_button(
+                                ui, 
+                                "TIMER", 
+                                egui::Color32::DARK_GRAY, 
+                                egui::Color32::YELLOW)
+                            .on_hover_text("Take a screenshot after a delay")
+                            .clicked() {
+                                self.make_action(Action::ManageTimer, ctx, frame);
+                            }
+
+                            if self.timer.form_open() {
+                                ui.label("Timer (in seconds)");
+                                ui.add(egui::DragValue::new(&mut self.timer.seconds).clamp_range(0..=60));
+
+                                if custom_button(ui, "Start timer", egui::Color32::DARK_GRAY, egui::Color32::YELLOW) {
+                                    self.make_action(Action::StartTimer, ctx, frame);
+                                }
+
+                                if custom_button(ui, "Cancel", egui::Color32::DARK_GRAY, egui::Color32::YELLOW) {
+                                    self.make_action(Action::ResetTimer, ctx, frame);
+                                }
+                            }
+
+                            if self.timer.is_running() {
+                                self.make_action(Action::ManageTimer, ctx, frame);
+
+                                if custom_button(ui, "Cancel", egui::Color32::DARK_GRAY, egui::Color32::YELLOW) {
+                                    self.make_action(Action::ResetTimer, ctx, frame);
+                                }                                
                             }
 
                             ui.add_space(10.0);
