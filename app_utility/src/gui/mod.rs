@@ -2,7 +2,7 @@ mod actions;
 mod screenshots;
 mod shortcut;
 
-use std::{sync::Arc, time::Duration, fs};
+use std::{time::Duration, fs};
 use native_dialog::FileDialog;
 use chrono::Local;
 use eframe::{
