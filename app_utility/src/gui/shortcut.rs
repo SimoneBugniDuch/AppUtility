@@ -33,6 +33,7 @@ pub struct ShortCut {
     pub description: String,
     pub shortcut: KeyboardShortcut,
     active: bool,
+    while_viewing_image: bool,
     action: Action,
 }
 
@@ -43,24 +44,57 @@ impl ShortCut {
             description,
             shortcut: KeyboardShortcut { modifiers, key },
             active: true,
-            action
+            while_viewing_image: action.can_be_performed_during_image_view(),
+            action,
+        }
+    }
+
+    fn shortcut_listener(&self, ctx: &egui::Context) -> Option<Action> {
+        if ctx.input_mut(|input_state| input_state.consume_shortcut(&self.shortcut)) && self.active {
+            Some(self.action.clone())
+        } else {
+            None
         }
     }
 }
 
-pub struct ShortcutVec {
-    pub set: Vec<ShortCut>,
+pub struct AllShortcuts {
+    pub vec: Vec<ShortCut>,
     pub show: bool,
 }
 
-impl ShortcutVec {
+impl AllShortcuts {
     pub fn default() -> Self {
-        let mut set = Vec::new();
-        set.push(ShortCut::new(Modifiers::COMMAND, Key::Z, "Undo".to_string(), Action::Undo));
-        set.push(ShortCut::new(Modifiers::COMMAND, Key::W, "Close the application".to_string(), Action::Close));
+        let mut vec = Vec::new();
+        vec.push(ShortCut::new(Modifiers::CTRL, Key::C, "Copy to clipboard".to_string(), Action::Copy));
+        vec.push(ShortCut::new(Modifiers::CTRL, Key::H, "Go to the home page".to_string(), Action::HomePage));
+        vec.push(ShortCut::new(Modifiers::CTRL, Key::N, "Take a new screenshot".to_string(), Action::NewScreenshot));
+        vec.push(ShortCut::new(Modifiers::CTRL, Key::S, "Save".to_string(), Action::Save));
+        vec.push(ShortCut::new(Modifiers::CTRL, Key::W, "Close the application".to_string(), Action::Close));
+        vec.push(ShortCut::new(Modifiers::CTRL, Key::Z, "Undo".to_string(), Action::Undo));
         Self {
-            set,
+            vec,
             show: false,
         }
+    }
+
+    pub fn listener(&self, ctx: &egui::Context) -> Option<Action> {
+        for shortcut in self.vec.iter() {
+            if shortcut.action == Action::Settings || shortcut.action == Action::Close {
+                if shortcut.active {
+                    if let Some(action) = shortcut.shortcut_listener(ctx) {
+                        return Some(action);
+                    }
+                }
+            } else {
+                //Shortcuts that can be pressed when viewing the image
+                if shortcut.while_viewing_image && shortcut.active {
+                    if let Some(action) = shortcut.shortcut_listener(ctx) {
+                        return Some(action);
+                    }
+                }
+            }
+        }
+        None
     }
 }

@@ -2,19 +2,19 @@ mod actions;
 mod screenshots;
 mod shortcut;
 
-use std::{sync::Arc, time::Duration, fs};
+use std::{time::Duration, fs};
 use native_dialog::FileDialog;
 use chrono::Local;
 use eframe::{
-    egui::{self, text, Color32, Layout, Sense, TextureHandle, Visuals, Window},
+    egui::{self, Color32, Layout, Sense, TextureHandle, Visuals, Window},
     epaint::vec2,
     run_native, App, Frame,
 };
-use image::{self, imageops::filter3x3, load_from_memory, ImageError};
+use image::{self, load_from_memory, ImageError};
 
 use self::screenshots::Screenshots;
 use self::shortcut::NewShortcut;
-use self::{actions::Action, shortcut::ShortcutVec};
+use self::{actions::Action, shortcut::AllShortcuts};
 
 struct AppUtility {
     rectangle: Rectangle,
@@ -31,7 +31,7 @@ struct AppUtility {
     texture: Option<TextureHandle>,
     selecting_area: bool,
     show_settings: bool,
-    shortcuts: ShortcutVec,
+    shortcuts: AllShortcuts,
 }
 
 struct Rectangle {
@@ -69,7 +69,7 @@ impl AppUtility {
             view_image: false,
             texture: None,
             show_settings: false,
-            shortcuts: ShortcutVec::default(),
+            shortcuts: AllShortcuts::default(),
         }
     }
 
@@ -85,6 +85,8 @@ impl AppUtility {
             Action::Copy => {}
             Action::HomePage => {
                 self.selecting_area = false;
+                self.view_image = false;
+                self.show_settings = false;
             }
             Action::Modify => {}
             Action::NewScreenshot => {
@@ -152,6 +154,7 @@ impl AppUtility {
 impl App for AppUtility {
     fn update(&mut self, ctx: &eframe::egui::Context, frame: &mut eframe::Frame) {
         ctx.set_visuals(Visuals::light());
+
         if self.hide {
             println!("Now I'm hiding");
             std::thread::sleep(Duration::from_millis(300));
@@ -210,6 +213,10 @@ impl App for AppUtility {
                         cross_justify: true,
                     },
                     |ui| {
+                        // match  {
+                        //     self.shortcuts.listener(ctx)    
+                        // }
+
                         if !self.view_image {
                             if custom_button(
                                 ui,
@@ -438,20 +445,20 @@ impl App for AppUtility {
                 println!("Am I here?!");
             });
 
-        if self.selecting_area {
-            println!("Do I need to be here?");
-            let rect = window.unwrap().response.rect;
-            let mut corr = 1.0;
-            if cfg!(target_os = "windows") {
-                corr = frame.info().native_pixels_per_point.unwrap();
-            }
-            self.rectangle = Rectangle {
-                x: rect.left() * corr,
-                y: rect.top() * corr,
-                width: rect.width() * corr,
-                height: rect.height() * corr,
-            }
-        }
+        // if self.selecting_area {
+        //     println!("Do I need to be here?");
+        //     let rect = window.unwrap().response.rect;
+        //     let mut corr = 1.0;
+        //     if cfg!(target_os = "windows") {
+        //         corr = frame.info().native_pixels_per_point.unwrap();
+        //     }
+        //     self.rectangle = Rectangle {
+        //         x: rect.left() * corr,
+        //         y: rect.top() * corr,
+        //         width: rect.width() * corr,
+        //         height: rect.height() * corr,
+        //     }
+        // }
 
         Window::new("Settings")
             .open(&mut self.show_settings)
@@ -479,7 +486,7 @@ impl App for AppUtility {
                         ui.label("Keyboard combination");
                         ui.end_row();
 
-                        for shortcut in &mut self.shortcuts.set {
+                        for shortcut in &mut self.shortcuts.vec {
                             let shortcut::ShortCut {
                                 name,
                                 description,
