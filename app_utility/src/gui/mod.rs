@@ -71,6 +71,8 @@ struct ModifiedElement {
     arrow: Vec<Vec<(egui::Pos2, egui::Stroke)>>,
     line: Vec<Vec<(egui::Pos2, egui::Stroke)>>,
     text: String,
+    entire_text: Vec<(egui::Pos2, String, egui::Stroke)>,
+    text_modified: bool,
 }
 
 impl AppUtility {
@@ -106,7 +108,9 @@ impl AppUtility {
                 circle: Default::default(),
                 arrow: Default::default(),
                 line: Default::default(),
+                entire_text: Default::default(),
                 text: "Example".to_owned(),
+                text_modified: false,
             },
             modifications_vector: Default::default(),
         }
@@ -146,6 +150,15 @@ impl AppUtility {
                 self.selection_mode = Selection::Fullscreen;
                 self.selecting_area = false;
                 self.show_settings = false;
+                self.modified_element.pen.clear();
+                self.modified_element.rect.clear();
+                self.modified_element.entire_text.clear();
+                self.modified_element.arrow.clear();
+                self.modified_element.line.clear();
+                self.modified_element.circle.clear();
+                self.modifications_vector.clear();
+                self.modifier = Modifier::NotSelected;
+                self.modification = false;
             }
             Action::Save => {
                 let mut filename = build_default_name();
@@ -198,7 +211,37 @@ impl AppUtility {
             Action::Settings => {
                 self.show_settings = true;
             }
-            Action::Undo => {}
+            Action::Undo => {
+                if let Some(last_modification) = self.modifications_vector.pop() {
+                    match last_modification {
+                        Modifier::NotSelected => {}
+                        Modifier::Pen => {
+                            self.modified_element.pen
+                                .remove(self.modified_element.pen.len() - 2);
+                        }
+                        Modifier::Line => {
+                            self.modified_element.line
+                                .remove(self.modified_element.line.len() - 2);
+                        }
+                        Modifier::Arrow => {
+                            self.modified_element.arrow
+                                .remove(self.modified_element.arrow.len() - 2);
+                        }
+                        Modifier::Rect => {
+                            self.modified_element.rect
+                                .remove(self.modified_element.rect.len() - 2);
+                        }
+                        Modifier::Circle => {
+                            self.modified_element.circle
+                                .remove(self.modified_element.circle.len() - 2);
+                        }
+                        Modifier::Text => {
+                            self.modified_element.entire_text.pop();
+                        }
+                        Modifier::Crop => {}
+                    }
+                }
+            }
         }
     }
 }
@@ -238,6 +281,15 @@ impl App for AppUtility {
             self.hide = false;
             self.view_image = true;
             self.selecting_area = false;
+            self.modification = false;
+            self.show_settings = false;
+            self.modified_element.pen.clear();
+            self.modified_element.rect.clear();
+            self.modified_element.entire_text.clear();
+            self.modified_element.arrow.clear();
+            self.modified_element.line.clear();
+            self.modified_element.circle.clear();
+            self.modifications_vector.clear();
             frame.set_visible(true);
         }
 
@@ -424,6 +476,7 @@ impl App for AppUtility {
                                 );
 
                                 if ui.button("  Save text  ").clicked() {
+                                    self.modified_element.text_modified = true;
                                     self.modifications_vector.push(Modifier::Text);
                                 };
                             }
@@ -440,6 +493,43 @@ impl App for AppUtility {
                            
                             if ui.button("  ⟲  ").on_hover_text("undo").clicked() {
                                 self.make_action(Action::Undo, ctx, frame);
+                            }
+                            if ui.button("  Cancel  ").on_hover_text("undo all modifications").clicked() {
+                                self.modified_element.pen.clear();
+                                self.modified_element.rect.clear();
+                                self.modified_element.entire_text.clear();
+                                self.modified_element.arrow.clear();
+                                self.modified_element.line.clear();
+                                self.modified_element.circle.clear();
+                                self.modifications_vector.clear();
+                                self.modifier = Modifier::NotSelected;
+                                self.modification = false;
+                            }
+                            if ui.button("  Save  ").clicked() {
+                                let dim_img = resize_to_fit_container(
+                                    frame.info().window_info.size.x / 3.0 * 2.0,
+                                    frame.info().window_info.size.y / 3.0 * 2.0,
+                                    self.texture.clone().unwrap().size_vec2()[0],
+                                    self.texture.clone().unwrap().size_vec2()[1],
+                                );
+
+                                let mut adj = 1.0;
+                                if cfg!(target_os = "windows") {
+                                    adj = frame.info().native_pixels_per_point.unwrap();
+                                }
+
+                                self.rectangle = Rectangle {
+                                    x: ((frame.info().window_info.size[0] - dim_img.0)
+                                        / 2.0)
+                                        * adj,
+                                    y: ((frame.info().window_info.size[1] - dim_img.1)
+                                        / 2.0)
+                                        * adj,
+                                    width: dim_img.0 * adj,
+                                    height: dim_img.1 * adj,
+                                };
+                                self.modifier = Modifier::NotSelected;
+                                self.hide = true;
                             }
                             if ui.button("  X  ").on_hover_text("Close").clicked() {
                                 self.modification = false;
@@ -627,6 +717,17 @@ impl App for AppUtility {
                                         );
                                     });
                                 });
+                            if self.modified_element.text_modified {
+                                self.modified_element.text_modified = false;
+                                let rectangle = res.response.rect;
+                                self.modified_element.entire_text.push((
+                                    egui::Pos2::new(rectangle.left(), rectangle.top()),
+                                    self.modified_element.text.clone(),
+                                    self.modified_element.stroke.clone(),
+                                ));
+                                self.modified_element.text = "Example".to_string();
+                                self.modifier = Modifier::NotSelected
+                            }
                         }
                         Modifier::Crop => {
                             let area = egui::Window::new("crop_area")
@@ -712,6 +813,10 @@ impl App for AppUtility {
                         let line = element.first().unwrap().0 - element.last().unwrap().0;
                         painter.arrow(element.first().unwrap().0, -line, element[0].1);
                     }
+                }
+
+                for element in self.modified_element.entire_text.clone() {
+                    painter.text(element.0, egui::Align2::LEFT_TOP, element.1, egui::FontId::proportional(element.2.width * 20.0 + 0.1), element.2.color);
                 }
 
                 painter.extend(pen);
