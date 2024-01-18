@@ -4,8 +4,6 @@ mod shortcut;
 mod timer;
 
 use arboard::{Clipboard, ImageData};
-use std::{time::{Duration, Instant}, fs, borrow::Cow};
-use native_dialog::FileDialog;
 use chrono::Local;
 use eframe::{
     egui::{self, Color32, Layout, Sense, TextureHandle, Visuals, Window},
@@ -13,8 +11,19 @@ use eframe::{
     run_native, App, Frame,
 };
 use image::{self, load_from_memory, ImageError};
+use native_dialog::FileDialog;
+use std::{
+    borrow::Cow,
+    fs,
+    time::{Duration, Instant},
+};
 
-use self::{screenshots::Screenshots, timer::Timer, actions::Action, shortcut::{AllShortcuts, NewShortcut, KeyboardKeys}};
+use self::{
+    actions::Action,
+    screenshots::Screenshots,
+    shortcut::{AllShortcuts, KeyboardKeys, NewShortcut},
+    timer::Timer,
+};
 
 struct AppUtility {
     buffer: Option<Vec<u8>>,
@@ -100,7 +109,12 @@ impl AppUtility {
                 text_modified: false,
             },
             new_shortcut: NewShortcut::default(),
-            rectangle: Rectangle { x: 0.0, y: 0.0, width: 0.0, height: 0.0 },
+            rectangle: Rectangle {
+                x: 0.0,
+                y: 0.0,
+                width: 0.0,
+                height: 0.0,
+            },
             screenshots: Screenshots::new(),
             selecting_area: false,
             selection_mode: Selection::Fullscreen,
@@ -140,7 +154,11 @@ impl AppUtility {
             }
             Action::ManageTimer => {
                 let now = Instant::now();
-                if now.duration_since(self.timer.start_instant.unwrap()).as_secs_f32() >= 1.0 {
+                if now
+                    .duration_since(self.timer.start_instant.unwrap())
+                    .as_secs_f32()
+                    >= 1.0
+                {
                     self.timer.decrement_timer();
                     if self.timer.seconds == 0 {
                         self.timer.reset_timer();
@@ -240,23 +258,28 @@ impl AppUtility {
                     match last_modification {
                         Modifier::NotSelected => {}
                         Modifier::Pen => {
-                            self.modified_element.pen
+                            self.modified_element
+                                .pen
                                 .remove(self.modified_element.pen.len() - 2);
                         }
                         Modifier::Line => {
-                            self.modified_element.line
+                            self.modified_element
+                                .line
                                 .remove(self.modified_element.line.len() - 2);
                         }
                         Modifier::Arrow => {
-                            self.modified_element.arrow
+                            self.modified_element
+                                .arrow
                                 .remove(self.modified_element.arrow.len() - 2);
                         }
                         Modifier::Rect => {
-                            self.modified_element.rect
+                            self.modified_element
+                                .rect
                                 .remove(self.modified_element.rect.len() - 2);
                         }
                         Modifier::Circle => {
-                            self.modified_element.circle
+                            self.modified_element
+                                .circle
                                 .remove(self.modified_element.circle.len() - 2);
                         }
                         Modifier::Text => {
@@ -273,11 +296,14 @@ impl AppUtility {
 impl App for AppUtility {
     fn update(&mut self, ctx: &eframe::egui::Context, frame: &mut eframe::Frame) {
         ctx.set_visuals(Visuals::light());
-    
+        let pos_central_x = frame.info().window_info.size.x / 2.0 - 70.0;
+        let pos_central_y = 30.0;
+        let window_default_color = Color32::LIGHT_BLUE;
+
         if self.hide {
             println!("Now I'm hiding");
             std::thread::sleep(Duration::from_millis(300));
-            let mut screen = self.screenshots.get_screen();
+            let screen = self.screenshots.get_screen();
             let img;
             match self.selection_mode {
                 Selection::Area => {
@@ -320,16 +346,24 @@ impl App for AppUtility {
         Window::new("home_page menu_bar")
             .title_bar(false)
             .frame(egui::Frame {
-                fill: egui::Color32::GRAY,
-                stroke: egui::Stroke::new(0.5, egui::Color32::BLACK),
+                fill: window_default_color,
+                stroke: egui::Stroke::new(0.5, egui::Color32::GRAY),
                 inner_margin: egui::style::Margin::same(15.0),
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .default_pos(calc_center_position(ctx, 500.0, 20.0))
-            .default_size(egui::vec2(250.0, 30.0))
+            .default_rect(egui::Rect::from_center_size(
+                egui::Pos2::new(pos_central_x - 100.0, pos_central_y),
+                egui::Vec2::new(300.0, 30.0),
+            ))
             .resizable(false)
-            .open(&mut (!self.view_image && !self.selecting_area && !self.show_settings && !self.timer.form_opened() && !self.timer.is_running()))
+            .open(
+                &mut (!self.view_image
+                    && !self.selecting_area
+                    && !self.show_settings
+                    && !self.timer.form_opened()
+                    && !self.timer.is_running()),
+            )
             .show(ctx, |ui| {
                 ui.with_layout(
                     Layout {
@@ -348,7 +382,7 @@ impl App for AppUtility {
 
                         if !self.view_image {
                             // if self.timer.is_running() {
-                            //     self.make_action(Action::ManageTimer, ctx, frame);                               
+                            //     self.make_action(Action::ManageTimer, ctx, frame);
                             // }
 
                             if custom_button(
@@ -381,12 +415,14 @@ impl App for AppUtility {
 
                             ui.add_space(10.0);
                             if custom_button(
-                                ui, 
-                                "TIMER", 
-                                egui::Color32::DARK_GRAY, 
-                                egui::Color32::YELLOW)
+                                ui,
+                                "  TIMER  ",
+                                egui::Color32::DARK_GRAY,
+                                egui::Color32::from_rgb(252, 226, 174),
+                            )
                             .on_hover_text("Take a screenshot after a delay")
-                            .clicked() {
+                            .clicked()
+                            {
                                 self.make_action(Action::SetTimer, ctx, frame);
                             }
                             ui.label(format!("Actual delay: {}", self.timer.seconds));
@@ -407,7 +443,7 @@ impl App for AppUtility {
                             ui.add_space(10.0);
                             if custom_button(
                                 ui,
-                                "x",
+                                "  x  ",
                                 egui::Color32::WHITE,
                                 egui::Color32::from_rgb(210, 69, 69),
                             )
@@ -426,14 +462,16 @@ impl App for AppUtility {
             .title_bar(false)
             .open(&mut self.view_image.clone())
             .frame(egui::Frame {
-                fill: egui::Color32::GRAY,
-                stroke: egui::Stroke::new(0.5, egui::Color32::BLACK),
+                fill: window_default_color,
+                stroke: egui::Stroke::new(0.5, egui::Color32::GRAY),
                 inner_margin: egui::style::Margin::same(15.0),
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .fixed_size([600.0, 30.0])
-            .default_pos(calc_center_position(ctx, 450.0, 20.0))
+            .default_rect(egui::Rect::from_center_size(
+                egui::Pos2::new(pos_central_x - 100.0, pos_central_y),
+                egui::Vec2::new(250.0, 30.0),
+            ))
             .resizable(false)
             .show(ctx, |ui| {
                 ui.with_layout(
@@ -453,33 +491,67 @@ impl App for AppUtility {
 
                         if self.view_image && !self.modification {
                             println!("Now I'm seeing the image");
-                            if custom_button(ui, "Modify", Color32::BLACK, Color32::GRAY).clicked()
+                            if custom_button(ui, "  Modify  ", Color32::WHITE, Color32::from_rgb(122, 229, 130))
+                                .on_hover_text("Open the toolbar to modify the screenshot")
+                                .clicked()
                             {
                                 self.make_action(Action::Modify, ctx, frame);
                             }
-                            if custom_button(ui, "Save", Color32::BLACK, Color32::GRAY).clicked() {
-                                self.make_action(Action::Save, ctx, frame);
-                            }
-                            if custom_button(ui, "Copy", Color32::BLACK, Color32::GRAY).clicked() {
+
+                            if custom_button(
+                                ui,
+                                "  Copy  ",
+                                Color32::WHITE,
+                                Color32::from_rgb(207, 191, 247),
+                            )
+                            .on_hover_text("Copy the screenshot to the clipboard")
+                            .clicked()
+                            {
                                 self.make_action(Action::Copy, ctx, frame);
                             }
-                            if custom_button(ui, "New screenshot", Color32::BLACK, Color32::GRAY)
-                                .clicked()
+
+                            if custom_button(
+                                ui,
+                                "  Save  ",
+                                Color32::WHITE,
+                                Color32::from_rgb(54, 82, 173),
+                            )
+                            .on_hover_text("Save the screenshot")
+                            .clicked()
+                            {
+                                self.make_action(Action::Save, ctx, frame);
+                            }
+
+                            if custom_button(
+                                ui,
+                                "  New screenshot  ",
+                                Color32::WHITE,
+                                Color32::LIGHT_RED,
+                            )
+                            .on_hover_text("Take a new screenshot going back to the home page")
+                            .clicked()
                             {
                                 self.make_action(Action::NewScreenshot, ctx, frame);
                                 //Magari se ci sono delle modifiche non salvate conviene chiedere conferma (Discard all unsaved changes?)
                             }
-                            if custom_button(ui, "Settings", Color32::BLACK, Color32::GRAY)
-                                .clicked()
+
+                            if custom_button(
+                                ui,
+                                "🔧  SETTINGS",
+                                egui::Color32::DARK_GRAY,
+                                egui::Color32::from_rgb(229, 224, 255),
+                            )
+                            .on_hover_text("Open the settings menu")
+                            .clicked()
                             {
                                 self.make_action(Action::Settings, ctx, frame);
                             }
-                            if circular_button(
+
+                            if custom_button(
                                 ui,
-                                " x ",
+                                "  x  ",
                                 egui::Color32::WHITE,
                                 egui::Color32::from_rgb(210, 69, 69),
-                                15.0,
                             )
                             .on_hover_text("Close the app")
                             .clicked()
@@ -552,7 +624,11 @@ impl App for AppUtility {
                             if ui.button("  ⟲  ").on_hover_text("undo").clicked() {
                                 self.make_action(Action::Undo, ctx, frame);
                             }
-                            if ui.button("  Cancel  ").on_hover_text("undo all modifications").clicked() {
+                            if ui
+                                .button("  Cancel  ")
+                                .on_hover_text("undo all modifications")
+                                .clicked()
+                            {
                                 self.modified_element.pen.clear();
                                 self.modified_element.rect.clear();
                                 self.modified_element.entire_text.clear();
@@ -577,12 +653,8 @@ impl App for AppUtility {
                                 }
 
                                 self.rectangle = Rectangle {
-                                    x: ((frame.info().window_info.size[0] - dim_img.0)
-                                        / 2.0)
-                                        * adj,
-                                    y: ((frame.info().window_info.size[1] - dim_img.1)
-                                        / 2.0)
-                                        * adj,
+                                    x: ((frame.info().window_info.size[0] - dim_img.0) / 2.0) * adj,
+                                    y: ((frame.info().window_info.size[1] - dim_img.1) / 2.0) * adj,
                                     width: dim_img.0 * adj,
                                     height: dim_img.1 * adj,
                                 };
@@ -636,7 +708,9 @@ impl App for AppUtility {
                         Modifier::NotSelected => {}
                         Modifier::Pen => {
                             //azione
-                            response.clone().on_hover_cursor(egui::output::CursorIcon::PointingHand);
+                            response
+                                .clone()
+                                .on_hover_cursor(egui::output::CursorIcon::PointingHand);
                             if self.modified_element.pen.is_empty() {
                                 self.modified_element.pen.push(vec![]);
                             }
@@ -646,8 +720,7 @@ impl App for AppUtility {
                                 if current_line.last()
                                     != Some(&(pointer_pos, self.modified_element.stroke))
                                 {
-                                    current_line
-                                        .push((pointer_pos, self.modified_element.stroke));
+                                    current_line.push((pointer_pos, self.modified_element.stroke));
                                     response.mark_changed();
                                 }
                             } else if !current_line.is_empty() {
@@ -658,7 +731,9 @@ impl App for AppUtility {
                         }
                         Modifier::Rect => {
                             //azione
-                            response.clone().on_hover_cursor(egui::output::CursorIcon::Crosshair);
+                            response
+                                .clone()
+                                .on_hover_cursor(egui::output::CursorIcon::Crosshair);
                             if self.modified_element.rect.is_empty() {
                                 self.modified_element.rect.push(vec![]);
                             }
@@ -668,8 +743,7 @@ impl App for AppUtility {
                                 if current_line.last()
                                     != Some(&(pointer_pos, self.modified_element.stroke))
                                 {
-                                    current_line
-                                        .push((pointer_pos, self.modified_element.stroke));
+                                    current_line.push((pointer_pos, self.modified_element.stroke));
                                     response.mark_changed();
                                 }
                             } else if !current_line.is_empty() {
@@ -680,7 +754,9 @@ impl App for AppUtility {
                         }
                         Modifier::Arrow => {
                             //azione
-                            response.clone().on_hover_cursor(egui::output::CursorIcon::Crosshair);
+                            response
+                                .clone()
+                                .on_hover_cursor(egui::output::CursorIcon::Crosshair);
                             if self.modified_element.arrow.is_empty() {
                                 self.modified_element.arrow.push(vec![]);
                             }
@@ -690,8 +766,7 @@ impl App for AppUtility {
                                 if current_line.last()
                                     != Some(&(pointer_pos, self.modified_element.stroke))
                                 {
-                                    current_line
-                                        .push((pointer_pos, self.modified_element.stroke));
+                                    current_line.push((pointer_pos, self.modified_element.stroke));
                                     response.mark_changed();
                                 }
                             } else if !current_line.is_empty() {
@@ -702,7 +777,9 @@ impl App for AppUtility {
                         }
                         Modifier::Line => {
                             //azione
-                            response.clone().on_hover_cursor(egui::output::CursorIcon::Crosshair);
+                            response
+                                .clone()
+                                .on_hover_cursor(egui::output::CursorIcon::Crosshair);
                             if self.modified_element.line.is_empty() {
                                 self.modified_element.line.push(vec![]);
                             }
@@ -713,8 +790,7 @@ impl App for AppUtility {
                                 if current_line.last()
                                     != Some(&(pointer_pos, self.modified_element.stroke))
                                 {
-                                    current_line
-                                        .push((pointer_pos, self.modified_element.stroke));
+                                    current_line.push((pointer_pos, self.modified_element.stroke));
                                     response.mark_changed();
                                 }
                             } else if !current_line.is_empty() {
@@ -725,7 +801,9 @@ impl App for AppUtility {
                         }
                         Modifier::Circle => {
                             //azione
-                            response.clone().on_hover_cursor(egui::output::CursorIcon::Crosshair);
+                            response
+                                .clone()
+                                .on_hover_cursor(egui::output::CursorIcon::Crosshair);
                             if self.modified_element.circle.is_empty() {
                                 self.modified_element.circle.push(vec![]);
                             }
@@ -735,8 +813,7 @@ impl App for AppUtility {
                                 if current_line.last()
                                     != Some(&(pointer_pos, self.modified_element.stroke))
                                 {
-                                    current_line
-                                        .push((pointer_pos, self.modified_element.stroke));
+                                    current_line.push((pointer_pos, self.modified_element.stroke));
                                     response.mark_changed();
                                 }
                             } else if !current_line.is_empty() {
@@ -769,9 +846,7 @@ impl App for AppUtility {
                                                 self.modified_element.text,
                                             ))
                                             .color(self.modified_element.stroke.color)
-                                            .size(
-                                                self.modified_element.stroke.width * 20.0 + 0.1,
-                                            ),
+                                            .size(self.modified_element.stroke.width * 20.0 + 0.1),
                                         );
                                     });
                                 });
@@ -819,7 +894,7 @@ impl App for AppUtility {
                             let mut adj = 1.0;
                             if cfg!(target_os = "windows") {
                                 adj = frame.info().native_pixels_per_point.unwrap();
-                            } 
+                            }
                             self.rectangle = Rectangle {
                                 x: (rectangle.left()) * adj,
                                 y: (rectangle.top()) * adj,
@@ -831,14 +906,19 @@ impl App for AppUtility {
                         _ => {}
                     }
                 }
-                let pen = self.modified_element.pen
-                    .iter().filter(|line| line.len() >= 2)
+                let pen = self
+                    .modified_element
+                    .pen
+                    .iter()
+                    .filter(|line| line.len() >= 2)
                     .map(|line| {
                         let points: Vec<egui::Pos2> = line.iter().map(|p| p.0).collect();
                         let stroke = line[0].1;
                         egui::Shape::line(points, stroke)
                     });
-                let rect = self.modified_element.rect
+                let rect = self
+                    .modified_element
+                    .rect
                     .iter()
                     .filter(|line| line.len() >= 2)
                     .map(|line| {
@@ -848,7 +928,9 @@ impl App for AppUtility {
                         );
                         egui::Shape::rect_stroke(rect, egui::Rounding::none(), line[0].1)
                     });
-                let circle = self.modified_element.circle
+                let circle = self
+                    .modified_element
+                    .circle
                     .iter()
                     .filter(|line| line.len() >= 2)
                     .map(|line| {
@@ -858,7 +940,9 @@ impl App for AppUtility {
                             line[0].1,
                         )
                     });
-                let line = self.modified_element.line
+                let line = self
+                    .modified_element
+                    .line
                     .iter()
                     .filter(|line| line.len() >= 2)
                     .map(|line| {
@@ -874,7 +958,13 @@ impl App for AppUtility {
                 }
 
                 for element in self.modified_element.entire_text.clone() {
-                    painter.text(element.0, egui::Align2::LEFT_TOP, element.1, egui::FontId::proportional(element.2.width * 20.0 + 0.1), element.2.color);
+                    painter.text(
+                        element.0,
+                        egui::Align2::LEFT_TOP,
+                        element.1,
+                        egui::FontId::proportional(element.2.width * 20.0 + 0.1),
+                        element.2.color,
+                    );
                 }
 
                 painter.extend(pen);
@@ -886,16 +976,22 @@ impl App for AppUtility {
         Window::new("screenshot_area menu_bar")
             .title_bar(false)
             .frame(egui::Frame {
-                fill: egui::Color32::LIGHT_GRAY,
+                fill: window_default_color,
                 stroke: egui::Stroke::new(0.5, egui::Color32::DARK_GRAY),
                 inner_margin: egui::style::Margin::same(15.0),
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .default_size(egui::vec2(200.0, 30.0))
-            .default_pos(calc_center_position(ctx, 300.0, 30.0))
+            .default_rect(egui::Rect::from_center_size(
+                egui::Pos2::new(pos_central_x - 70.0, pos_central_y),
+                egui::Vec2::new(200.0, 30.0),
+            ))
             .resizable(false)
-            .open(&mut (self.selecting_area.clone() && !self.timer.form_opened() && !self.timer.is_running()))
+            .open(
+                &mut (self.selecting_area.clone()
+                    && !self.timer.form_opened()
+                    && !self.timer.is_running()),
+            )
             .show(ctx, |ui| {
                 ui.with_layout(
                     Layout {
@@ -921,12 +1017,14 @@ impl App for AppUtility {
 
                         ui.add_space(10.0);
                         if custom_button(
-                            ui, 
-                            "TIMER", 
-                            egui::Color32::DARK_GRAY, 
-                            egui::Color32::YELLOW)
+                            ui,
+                            "  TIMER  ",
+                            egui::Color32::DARK_GRAY,
+                            egui::Color32::from_rgb(252, 226, 174),
+                        )
                         .on_hover_text("Take a screenshot after a delay")
-                        .clicked() {
+                        .clicked()
+                        {
                             self.make_action(Action::SetTimer, ctx, frame);
                         }
                         ui.label(format!("Actual delay: {}", self.timer.seconds));
@@ -991,7 +1089,6 @@ impl App for AppUtility {
             }
         }
 
-        
         Window::new("Settings:")
             .open(&mut self.show_settings)
             .frame(egui::Frame {
@@ -1001,7 +1098,10 @@ impl App for AppUtility {
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .default_pos(calc_center_position(ctx, 800.0, 100.0))
+            .default_rect(egui::Rect::from_center_size(
+                egui::Pos2::new(pos_central_x - 150.0, 300.0),
+                egui::Vec2::new(100.0, 100.0),
+            ))
             .movable(true)
             .resizable(false)
             .show(ctx, |ui| {
@@ -1018,9 +1118,8 @@ impl App for AppUtility {
                         ui.label("Keyboard combination");
                         ui.label("Actions");
                         ui.end_row();
-        
+
                         for shortcut in &mut self.shortcuts.vec {
-                            
                             // egui::ComboBox::from_id_source("All actions")
                             //                 .selected_text(if self.new_shortcut.is_default {
                             //                     "Select action".to_owned()
@@ -1041,23 +1140,18 @@ impl App for AppUtility {
                             //                     }
                             //                 });
 
-                            
                             ui.add_sized(
                                 [300.0, 0.0],
                                 egui::TextEdit::singleline(&mut shortcut.description),
                             );
-        
-                            // Dropdown for keyboard shortcut
-                            egui::ComboBox::from_id_source("All keys")
-                                            .show_ui(ui, |ui| {
-                                                for k in KeyboardKeys::default().keys.iter() {
-                                                    let txt = format!("{}", k.name());
-                                                    
-                                                }
-                                            });
-                            
 
-        
+                            // Dropdown for keyboard shortcut
+                            egui::ComboBox::from_id_source("All keys").show_ui(ui, |ui| {
+                                for k in KeyboardKeys::default().keys.iter() {
+                                    let txt = format!("{}", k.name());
+                                }
+                            });
+
                             // Buttons for save and delete
                             ui.horizontal(|ui| {
                                 if custom_button(
@@ -1065,7 +1159,9 @@ impl App for AppUtility {
                                     " save  ",
                                     Color32::WHITE,
                                     Color32::from_rgb(210, 69, 69),
-                                ).clicked() {
+                                )
+                                .clicked()
+                                {
                                     // Save logic here
                                 }
                                 if custom_button(
@@ -1073,11 +1169,13 @@ impl App for AppUtility {
                                     " delete  ",
                                     Color32::WHITE,
                                     Color32::from_rgb(210, 69, 69),
-                                ).clicked() {
+                                )
+                                .clicked()
+                                {
                                     // Delete logic here
                                 }
                             });
-        
+
                             ui.end_row();
                         }
                     });
@@ -1089,24 +1187,44 @@ impl App for AppUtility {
             .movable(true)
             .resizable(false)
             .frame(egui::Frame {
-                fill: egui::Color32::LIGHT_GRAY,
+                fill: window_default_color,
                 stroke: egui::Stroke::new(0.5, egui::Color32::DARK_GRAY),
                 inner_margin: egui::style::Margin::same(15.0),
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
-            .default_pos(calc_center_position(ctx, 800.0, 100.0))
+            .default_rect(egui::Rect::from_center_size(
+                egui::Pos2::new(pos_central_x + 70.0, 100.0),
+                egui::Vec2::new(300.0, 100.0),
+            ))
             .show(ctx, |ui| {
                 ui.label("Timer (in seconds)");
+                ui.add_space(20.0);
                 ui.add(egui::DragValue::new(&mut self.timer.seconds).clamp_range(0..=60));
-
-                if custom_button(ui, "Save changes",egui::Color32::DARK_GRAY, egui::Color32::YELLOW).clicked() {
-                    self.timer.close_form();
-                }
-
-                if custom_button(ui, "Reset", egui::Color32::DARK_GRAY, egui::Color32::YELLOW).clicked() {
-                    self.make_action(Action::ResetTimer, ctx, frame);
-                }
+                ui.add_space(10.0);
+                ui.horizontal(|ui| {
+                    if custom_button(
+                        ui,
+                        "  Save changes  ",
+                        egui::Color32::DARK_GRAY,
+                        egui::Color32::from_rgb(252, 226, 174),
+                    )
+                    .clicked()
+                    {
+                        self.timer.close_form();
+                    }
+                    ui.add_space(5.0);
+                    if custom_button(
+                        ui,
+                        "  Reset  ",
+                        egui::Color32::DARK_GRAY,
+                        egui::Color32::LIGHT_RED,
+                    )
+                    .clicked()
+                    {
+                        self.make_action(Action::ResetTimer, ctx, frame);
+                    }
+                });
             });
 
         Window::new("Timer running")
@@ -1121,18 +1239,29 @@ impl App for AppUtility {
                 ..Default::default()
             })
             .show(ctx, |ui| {
-                ui.label(egui::RichText::new(self.timer.seconds.to_string()).size(30.0).color(egui::Color32::GOLD));
+                ui.label(
+                    egui::RichText::new(self.timer.seconds.to_string())
+                        .size(30.0)
+                        .color(egui::Color32::GOLD),
+                );
                 if self.timer.is_running() {
-                    self.make_action(Action::ManageTimer, ctx, frame);                               
+                    self.make_action(Action::ManageTimer, ctx, frame);
                 }
-                if custom_button(ui, "Cancel", egui::Color32::DARK_GRAY, egui::Color32::YELLOW).clicked() {
+                if custom_button(
+                    ui,
+                    "Cancel",
+                    egui::Color32::DARK_GRAY,
+                    egui::Color32::YELLOW,
+                )
+                .clicked()
+                {
                     self.make_action(Action::ResetTimer, ctx, frame);
-                } 
+                }
             });
     }
 }
 
-fn calc_center_position(ctx: &egui::Context, window_width: f32, pos_y: f32, ) -> egui::Pos2 {
+fn calc_center_position(ctx: &egui::Context, window_width: f32, pos_y: f32) -> egui::Pos2 {
     let screen_width = ctx.available_rect().width(); // Set the screen width
     let window_x = (screen_width - window_width) / 2.0; // Centered x-coordinate
     egui::pos2(window_x, pos_y) // Return the position
@@ -1176,34 +1305,6 @@ fn custom_button(
     bg_color: Color32,
 ) -> egui::Response {
     custom_button_with_font_size(ui, text, text_color, bg_color, 13.0)
-}
-
-fn circular_button(
-    ui: &mut egui::Ui,
-    text: &str,
-    text_color: Color32,
-    bg_color: Color32,
-    radius: f32,
-) -> egui::Response {
-    let desired_size = egui::Vec2::splat(radius * 2.0);
-    let (rect, response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
-
-    if ui.is_rect_visible(rect) {
-        ui.painter().circle_filled(rect.center(), radius, bg_color);
-
-        // Create a FontId with the specified font size
-        let font_id = egui::FontId::new(20.0, egui::FontFamily::Proportional);
-
-        ui.painter().text(
-            rect.center(),
-            egui::Align2::CENTER_CENTER,
-            text,
-            font_id,
-            text_color,
-        );
-    }
-
-    response
 }
 
 fn build_default_name() -> String {
