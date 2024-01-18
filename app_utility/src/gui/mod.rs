@@ -548,7 +548,7 @@ impl App for AppUtility {
                                     self.hide = true;
                                 }
                             }
-
+                            egui::stroke_ui(ui, &mut self.modified_element.stroke, "Stroke");
                             if ui.button("  ⟲  ").on_hover_text("undo").clicked() {
                                 self.make_action(Action::Undo, ctx, frame);
                             }
