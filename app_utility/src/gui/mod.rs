@@ -15,13 +15,13 @@ use native_dialog::FileDialog;
 use std::{
     borrow::Cow,
     fs,
-    time::{Duration, Instant},
+    time::{Duration, Instant}, any::Any,
 };
 
 use self::{
     actions::Action,
     screenshots::Screenshots,
-    shortcut::{AllShortcuts, KeyboardKeys, NewShortcut},
+    shortcut::{AddedShortcut, AllShortcuts, KeyboardKeys},
     timer::Timer,
 };
 
@@ -36,16 +36,17 @@ struct AppUtility {
     modifications_vector: Vec<Modifier>,
     modified_element: ModifiedElement,
     modifier: Modifier,
-    new_shortcut: NewShortcut,
     rectangle: Rectangle,
     screenshots: Screenshots,
     selecting_area: bool,
     selection_mode: Selection,
     shortcuts: AllShortcuts,
+    added_shortcut: AddedShortcut,
     show_settings: bool,
     texture: Option<TextureHandle>,
     timer: Timer,
     view_image: bool,
+    all_actions: Vec<Action>,
 }
 
 struct Rectangle {
@@ -108,7 +109,6 @@ impl AppUtility {
                 text: "Example".to_owned(),
                 text_modified: false,
             },
-            new_shortcut: NewShortcut::default(),
             rectangle: Rectangle {
                 x: 0.0,
                 y: 0.0,
@@ -119,6 +119,8 @@ impl AppUtility {
             selecting_area: false,
             selection_mode: Selection::Fullscreen,
             shortcuts: AllShortcuts::default(),
+            added_shortcut: AddedShortcut::default(),
+            all_actions: Action::all_actions(),
             show_settings: false,
             texture: None,
             timer: Timer::new(),
@@ -491,9 +493,14 @@ impl App for AppUtility {
 
                         if self.view_image && !self.modification {
                             println!("Now I'm seeing the image");
-                            if custom_button(ui, "  Modify  ", Color32::WHITE, Color32::from_rgb(122, 229, 130))
-                                .on_hover_text("Open the toolbar to modify the screenshot")
-                                .clicked()
+                            if custom_button(
+                                ui,
+                                "  Modify  ",
+                                Color32::WHITE,
+                                Color32::from_rgb(122, 229, 130),
+                            )
+                            .on_hover_text("Open the toolbar to modify the screenshot")
+                            .clicked()
                             {
                                 self.make_action(Action::Modify, ctx, frame);
                             }
@@ -1092,8 +1099,8 @@ impl App for AppUtility {
         Window::new("Settings:")
             .open(&mut self.show_settings)
             .frame(egui::Frame {
-                fill: egui::Color32::LIGHT_GRAY,
-                stroke: egui::Stroke::new(0.5, egui::Color32::DARK_GRAY),
+                fill: window_default_color,
+                stroke: egui::Stroke::new(0.5, egui::Color32::BLACK),
                 inner_margin: egui::style::Margin::same(15.0),
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
@@ -1110,7 +1117,7 @@ impl App for AppUtility {
                 ui.separator();
                 ui.add_space(10.0);
                 egui::Grid::new("shortcut_grid")
-                    .spacing([10.0, 5.0])
+                    .spacing([10.0, 15.0])
                     .striped(true)
                     .show(ui, |ui| {
                         ui.label("Shortcut Name");
@@ -1119,39 +1126,30 @@ impl App for AppUtility {
                         ui.label("Actions");
                         ui.end_row();
 
-                        for shortcut in &mut self.shortcuts.vec {
-                            // egui::ComboBox::from_id_source("All actions")
-                            //                 .selected_text(if self.new_shortcut.is_default {
-                            //                     "Select action".to_owned()
-                            //                 } else {
-                            //                     match self.new_shortcut.action {
-                            //                         Some(a) => a.to_string(),
-                            //                         None => "Select action".to_owned(),
-                            //                     }
-                            //                 })
-                            //                 .show_ui(ui, |ui| {
-                            //                     for a in AllActionArr::new().all_action.iter() {
-                            //                         let txt = format!("{}", a.to_string());
-                            //                         ui.selectable_value(
-                            //                             &mut self.new_shortcut.action,
-                            //                             Some(*a),
-                            //                             txt,
-                            //                         );
-                            //                     }
-                            //                 });
+                        
+                        for (index, shortcut) in self.shortcuts.vec.iter_mut().enumerate() {
+                            // Dropdown menu to pick up the shortcut action name
+                            egui::ComboBox::from_id_source(format!("{}{}", shortcut.name, index))
+                                .selected_text(
+                                    shortcut.name.clone()
+                                )
+                                .show_ui(ui, |ui| {
+                                    for action in &self.all_actions {
+                                        let txt = format!("{}", action.to_string());
+                                        ui.selectable_value(
+                                            &mut shortcut.name,
+                                            action.to_string(),
+                                            txt,
+                                        );
+                                    }
+                                });    
 
                             ui.add_sized(
-                                [300.0, 0.0],
-                                egui::TextEdit::singleline(&mut shortcut.description),
+                                [300.0, 10.0],
+                                egui::TextEdit::singleline(&mut shortcut.description).desired_rows(1),
                             );
 
-                            // Dropdown for keyboard shortcut
-                            egui::ComboBox::from_id_source("All keys").show_ui(ui, |ui| {
-                                for k in KeyboardKeys::default().keys.iter() {
-                                    let txt = format!("{}", k.name());
-                                }
-                            });
-
+                            
                             // Buttons for save and delete
                             ui.horizontal(|ui| {
                                 if custom_button(

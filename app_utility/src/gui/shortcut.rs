@@ -2,15 +2,15 @@ use eframe::egui;
 use egui::{Modifiers, Key, KeyboardShortcut};
 use super::actions::Action;
 
-pub struct NewShortcut {
-    modifiers: Modifiers,
-    key: Option<Key>,
+pub struct AddedShortcut {
+    pub modifiers: Modifiers,
+    pub key: Option<Key>,
     default: bool,
-    action: Option<Action>,
-    description: String,
+    pub action: Option<Action>,
+    pub description: String,
 }
 
-impl NewShortcut {
+impl AddedShortcut {
     pub fn default() -> Self {
         Self {
             modifiers: Modifiers {
@@ -103,7 +103,7 @@ impl AllShortcuts {
         None
     }
 
-    pub fn save_new_shortcut(&mut self, new_shortcut: &mut NewShortcut) -> Option<ShortCut> {
+    pub fn save_new_shortcut(&mut self, new_shortcut: &mut AddedShortcut) -> Option<ShortCut> {
         if let Some(_) = new_shortcut.action {
             if let Some(_) = new_shortcut.key {
                 if !new_shortcut.modifiers.is_none() {
