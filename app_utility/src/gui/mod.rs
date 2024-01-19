@@ -633,6 +633,8 @@ impl App for AppUtility {
                             if self.modifier == Modifier::Crop {
                                 if ui.button("  Save crop  ").clicked() {
                                     self.modifier = Modifier::NotSelected;
+                                    self.selection_mode = Selection::Area;
+                                    println!("I've cropped");
                                     self.hide = true;
                                 }
                             }
@@ -675,7 +677,6 @@ impl App for AppUtility {
                                 };
                                 self.modifier = Modifier::NotSelected;
                                 self.selection_mode = Selection::Area;
-                                println!("I've cropped");
                                 self.hide = true;
                             }
                             if ui.button("  X  ").on_hover_text("Close").clicked() {
