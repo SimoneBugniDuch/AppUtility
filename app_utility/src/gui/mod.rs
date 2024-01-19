@@ -1107,7 +1107,7 @@ impl App for AppUtility {
                 })
                 .default_rect(egui::Rect::from_center_size(
                     egui::Pos2::new(pos_central_x + 20.0, 100.0),
-                    egui::Vec2::new(800.0, 400.0),
+                    egui::Vec2::new(700.0, 500.0),
                 ))
                 .scroll2([false, true])
                 .movable(true)
@@ -1184,7 +1184,7 @@ impl App for AppUtility {
                         ui,
                         "  SAVE SHOURTCUTS  ",
                         Color32::WHITE,
-                        Color32::DARK_BLUE,
+                        egui::Color32::from_rgb(114, 134, 211),
                     )
                     .clicked()
                     {
@@ -1235,12 +1235,11 @@ impl App for AppUtility {
                     ui.separator();
                     ui.add_space(20.0);
                     ui.vertical_centered(|ui| {
-                        if custom_button_with_font_size(
+                        if custom_button(
                             ui,
                             "  CLOSE SETTINGS  ",
                             Color32::WHITE,
                             Color32::LIGHT_RED,
-                            15.0,
                         )
                         .clicked()
                         {
