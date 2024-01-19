@@ -907,8 +907,6 @@ impl App for AppUtility {
                                 height: rectangle.height() * adj,
                             };
                         }
-
-                        _ => {}
                     }
                 }
                 let pen = self
