@@ -357,8 +357,9 @@ impl App for AppUtility {
             })
             .default_rect(egui::Rect::from_center_size(
                 egui::Pos2::new(pos_central_x , pos_central_y),
-                egui::Vec2::new(200.0, 30.0),
+                egui::Vec2::new(300.0, 30.0),
             ))
+            .anchor(egui::Align2::CENTER_TOP, [0.0, 15.0])
             .resizable(false)
             .open(
                 &mut (!self.view_image
@@ -463,7 +464,7 @@ impl App for AppUtility {
         Window::new("screenshot_taken toolbar")
             //TODO: QUI BISOGNA INSERIRE I BOTTONI DI MODIFICA, DI COPIA ECC...
             .title_bar(false)
-            .anchor(egui::Align2::CENTER_TOP, [0.0, 0.0])
+            .anchor(egui::Align2::CENTER_TOP, [0.0, 15.0])
             .open(&mut (self.view_image.clone() && !self.show_settings))
             .frame(egui::Frame {
                 fill: window_default_color,
