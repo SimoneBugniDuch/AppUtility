@@ -345,7 +345,7 @@ impl App for AppUtility {
             self.modifications_vector.clear();
             frame.set_visible(true);
         }
-
+        
         Window::new("home_page menu_bar")
             .title_bar(false)
             .frame(egui::Frame {
@@ -356,8 +356,8 @@ impl App for AppUtility {
                 ..Default::default()
             })
             .default_rect(egui::Rect::from_center_size(
-                egui::Pos2::new(pos_central_x - 300.0, pos_central_y),
-                egui::Vec2::new(300.0, 30.0),
+                egui::Pos2::new(pos_central_x , pos_central_y),
+                egui::Vec2::new(200.0, 30.0),
             ))
             .resizable(false)
             .open(
@@ -569,42 +569,14 @@ impl App for AppUtility {
                                 self.make_action(Action::Close, ctx, frame);
                             }
                         } else {
-                            if ui.button(" 🖊  ").on_hover_text("Draw").clicked() {
-                                //fare la modifica effettiva
-                                self.modifier = Modifier::Pen;
-                            }
-                            if ui.button("  /  ").on_hover_text("Draw a line").clicked() {
-                                //fare la modifica effettiva
-                                self.modifier = Modifier::Line;
-                            }
-                            if ui.button("  ↖  ").on_hover_text("Draw an arrow").clicked() {
-                                //fare la modifica effettiva
-                                self.modifier = Modifier::Arrow;
-                            }
-                            if ui
-                                .button("  ☐  ")
-                                .on_hover_text("Draw a rectangle")
-                                .clicked()
-                            {
-                                //fare la modifica effettiva
-                                self.modifier = Modifier::Rect;
-                            }
-                            if ui.button("  ⭕  ").on_hover_text("Draw a circle").clicked() {
-                                //fare la modifica effettiva
-                                self.modifier = Modifier::Circle;
-                            }
-                            if ui
-                                .button("  Text  ")
-                                .on_hover_text("Write a text")
-                                .clicked()
-                            {
-                                //fare la modifica effettiva
-                                if self.modifier ==  Modifier::NotSelected{
-                                    self.modifier = Modifier::Text;
-                                }else if self.modifier == Modifier::Text{
-                                    self.modifier = Modifier::NotSelected;
-                                }
-                            }
+                            ui.selectable_value(&mut self.modifier, Modifier::Pen, " 🖊  ").on_hover_text("Draw");
+                            ui.selectable_value(&mut self.modifier, Modifier::Line, "  /  ").on_hover_text("Draw a line");
+                            ui.selectable_value(&mut self.modifier, Modifier::Arrow, "  ↖  ").on_hover_text("Draw an arrow");
+                            ui.selectable_value(&mut self.modifier, Modifier::Rect, "  ☐  ").on_hover_text("Draw a rectangle");
+                            ui.selectable_value(&mut self.modifier, Modifier::Circle, "  ⭕  ").on_hover_text("Draw a circle");
+                            ui.label("|");
+                            ui.selectable_value(&mut self.modifier, Modifier::Text, "  T  ").on_hover_text("Write a text");
+                            
                             if self.modifier == Modifier::Text {
                                 egui::ScrollArea::vertical().min_scrolled_height(30.0).show(
                                     ui,
@@ -620,23 +592,31 @@ impl App for AppUtility {
                                     },
                                 );
 
-                                if ui.button("  Save text  ").clicked() {
+                                if ui.button("  Save text ").clicked() {
                                     self.modified_element.text_modified = true;
                                     self.modifications_vector.push(Modifier::Text);
                                 };
-                                
-                            }
-                            if ui.button("  ⛶  ").on_hover_text("Crop").clicked() {
-                                //fare la modifica effettiva
-                                self.modifier = Modifier::Crop;
-                            }
+                                if ui.button("  X  ").on_hover_text("Close text").clicked() {
+                                    self.modifier = Modifier::NotSelected;
+                                };
+                            } 
+
+                            ui.label("|");
+                            ui.selectable_value(&mut self.modifier, Modifier::Crop, "  ⛶  ").on_hover_text(" Crop area ");
+
                             if self.modifier == Modifier::Crop {
-                                if ui.button("  Save crop  ").clicked() {
+                                if ui.button("  Save Crop ").clicked() {
                                     self.modifier = Modifier::NotSelected;
                                     self.hide = true;
                                 }
+                                if ui.button("  X  ").on_hover_text("Close crop").clicked() {
+                                    self.modifier = Modifier::NotSelected;
+                                }
                             }
+                            ui.label("|");
                             egui::stroke_ui(ui, &mut self.modified_element.stroke, "Stroke");
+                            ui.label("|");
+                            
                             if ui.button("  ⟲  ").on_hover_text("undo").clicked() {
                                 self.make_action(Action::Undo, ctx, frame);
                             }
