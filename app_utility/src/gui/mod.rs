@@ -499,7 +499,8 @@ impl App for AppUtility {
                                 ui,
                                 "  Modify  ",
                                 Color32::WHITE,
-                                Color32::from_rgb(122, 229, 130),
+                                Color32::from_rgb(65, 105, 225)
+                                ,
                             )
                             .on_hover_text("Open the toolbar to modify the screenshot")
                             .clicked()
@@ -511,7 +512,7 @@ impl App for AppUtility {
                                 ui,
                                 "  Copy  ",
                                 Color32::WHITE,
-                                Color32::from_rgb(207, 191, 247),
+                                Color32::from_rgb(100, 149, 237),
                             )
                             .on_hover_text("Copy the screenshot to the clipboard")
                             .clicked()
@@ -523,7 +524,7 @@ impl App for AppUtility {
                                 ui,
                                 "  Save  ",
                                 Color32::WHITE,
-                                Color32::from_rgb(54, 82, 173),
+                                Color32::from_rgb(112, 170, 230),
                             )
                             .on_hover_text("Save the screenshot")
                             .clicked()
@@ -535,7 +536,7 @@ impl App for AppUtility {
                                 ui,
                                 "  New screenshot  ",
                                 Color32::WHITE,
-                                Color32::LIGHT_RED,
+                                Color32::from_rgb(150, 150, 240)
                             )
                             .on_hover_text("Take a new screenshot going back to the home page")
                             .clicked()
@@ -560,7 +561,7 @@ impl App for AppUtility {
                                 ui,
                                 "  x  ",
                                 egui::Color32::WHITE,
-                                egui::Color32::from_rgb(210, 69, 69),
+                                egui::Color32::from_rgb(205, 92, 92),
                             )
                             .on_hover_text("Close the app")
                             .clicked()
