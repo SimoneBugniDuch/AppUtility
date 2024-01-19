@@ -21,7 +21,7 @@ use std::{
 use self::{
     actions::Action,
     screenshots::Screenshots,
-    shortcut::{ AllShortcuts, ShortCut},
+    shortcut::{AllShortcuts, ShortCut},
     timer::Timer,
 };
 
@@ -345,7 +345,7 @@ impl App for AppUtility {
             self.modifications_vector.clear();
             frame.set_visible(true);
         }
-        
+
         Window::new("home_page menu_bar")
             .title_bar(false)
             .frame(egui::Frame {
@@ -356,7 +356,7 @@ impl App for AppUtility {
                 ..Default::default()
             })
             .default_rect(egui::Rect::from_center_size(
-                egui::Pos2::new(pos_central_x , pos_central_y),
+                egui::Pos2::new(pos_central_x, pos_central_y),
                 egui::Vec2::new(300.0, 30.0),
             ))
             .anchor(egui::Align2::CENTER_TOP, [0.0, 15.0])
@@ -500,8 +500,7 @@ impl App for AppUtility {
                                 ui,
                                 "  Modify  ",
                                 Color32::WHITE,
-                                Color32::from_rgb(65, 105, 225)
-                                ,
+                                Color32::from_rgb(65, 105, 225),
                             )
                             .on_hover_text("Open the toolbar to modify the screenshot")
                             .clicked()
@@ -537,7 +536,7 @@ impl App for AppUtility {
                                 ui,
                                 "  New screenshot  ",
                                 Color32::WHITE,
-                                Color32::from_rgb(150, 150, 240)
+                                Color32::from_rgb(150, 150, 240),
                             )
                             .on_hover_text("Take a new screenshot going back to the home page")
                             .clicked()
@@ -570,14 +569,20 @@ impl App for AppUtility {
                                 self.make_action(Action::Close, ctx, frame);
                             }
                         } else {
-                            ui.selectable_value(&mut self.modifier, Modifier::Pen, " 🖊  ").on_hover_text("Draw");
-                            ui.selectable_value(&mut self.modifier, Modifier::Line, "  /  ").on_hover_text("Draw a line");
-                            ui.selectable_value(&mut self.modifier, Modifier::Arrow, "  ↖  ").on_hover_text("Draw an arrow");
-                            ui.selectable_value(&mut self.modifier, Modifier::Rect, "  ☐  ").on_hover_text("Draw a rectangle");
-                            ui.selectable_value(&mut self.modifier, Modifier::Circle, "  ⭕  ").on_hover_text("Draw a circle");
+                            ui.selectable_value(&mut self.modifier, Modifier::Pen, " 🖊  ")
+                                .on_hover_text("Draw");
+                            ui.selectable_value(&mut self.modifier, Modifier::Line, "  /  ")
+                                .on_hover_text("Draw a line");
+                            ui.selectable_value(&mut self.modifier, Modifier::Arrow, "  ↖  ")
+                                .on_hover_text("Draw an arrow");
+                            ui.selectable_value(&mut self.modifier, Modifier::Rect, "  ☐  ")
+                                .on_hover_text("Draw a rectangle");
+                            ui.selectable_value(&mut self.modifier, Modifier::Circle, "  ⭕  ")
+                                .on_hover_text("Draw a circle");
                             ui.label("|");
-                            ui.selectable_value(&mut self.modifier, Modifier::Text, "  T  ").on_hover_text("Write a text");
-                            
+                            ui.selectable_value(&mut self.modifier, Modifier::Text, "  T  ")
+                                .on_hover_text("Write a text");
+
                             if self.modifier == Modifier::Text {
                                 egui::ScrollArea::vertical().min_scrolled_height(30.0).show(
                                     ui,
@@ -600,10 +605,11 @@ impl App for AppUtility {
                                 if ui.button("  X  ").on_hover_text("Close text").clicked() {
                                     self.modifier = Modifier::NotSelected;
                                 };
-                            } 
+                            }
 
                             ui.label("|");
-                            ui.selectable_value(&mut self.modifier, Modifier::Crop, "  ⛶  ").on_hover_text(" Crop area ");
+                            ui.selectable_value(&mut self.modifier, Modifier::Crop, "  ⛶  ")
+                                .on_hover_text(" Crop area ");
 
                             if self.modifier == Modifier::Crop {
                                 if ui.button("  Save Crop ").clicked() {
@@ -619,7 +625,7 @@ impl App for AppUtility {
                             ui.label("|");
                             egui::stroke_ui(ui, &mut self.modified_element.stroke, "Stroke");
                             ui.label("|");
-                            
+
                             if ui.button("  ⟲  ").on_hover_text("undo").clicked() {
                                 self.make_action(Action::Undo, ctx, frame);
                             }
@@ -1174,26 +1180,63 @@ impl App for AppUtility {
                         });
 
                     ui.add_space(20.0);
+
+                    if custom_button_with_font_size(
+                        ui,
+                        "  SAVE SHOURTCUTS  ",
+                        Color32::WHITE,
+                        Color32::DARK_BLUE,
+                        15.0,
+                    )
+                    .clicked()
+                    {
+                        // clone the temp_shortcuts into the shortcuts but only if the shortcuts are valid (no actions with the same shortcut combination )
+                        // if the shortcuts are not valid, show a popup with the error
+                        if !self.temp_shortcuts.has_duplicate_shortcuts() {
+                            self.shortcuts = self.temp_shortcuts.clone();
+                            self.show_settings = false;
+                        } else {
+                            self.show_error = true;
+                        }
+                    }
+                    ui.add_space(25.0);
+
+                    ui.separator();
+                    ui.add_space(10.0);
+                    ui.heading("Location and name");
+                    ui.add_space(20.0);
+                    ui.label(egui::RichText::new("Screenshots path: ").color(Color32::BLACK));
                     ui.horizontal(|ui| {
-                        if custom_button_with_font_size(
-                            ui,
-                            "  SAVE SHOURTCUTS  ",
-                            Color32::WHITE,
-                            Color32::DARK_BLUE,
-                            15.0,
-                        )
-                        .clicked()
-                        {
-                            // clone the temp_shortcuts into the shortcuts but only if the shortcuts are valid (no actions with the same shortcut combination )
-                            // if the shortcuts are not valid, show a popup with the error
-                            if !self.temp_shortcuts.has_duplicate_shortcuts() {
-                                self.shortcuts = self.temp_shortcuts.clone();
-                                self.show_settings = false;
-                            } else {
-                                self.show_error = true;
+                        let set_path_text = ui.text_edit_singleline(&mut self.default_path);
+                        if ui.button("Change").clicked() {
+                            let result = FileDialog::new().show_open_single_dir().unwrap();
+                            if result.is_some() {
+                                self.default_path = result.unwrap().to_string_lossy().to_string();
                             }
                         }
-                        ui.add_space(5.0);
+                        if set_path_text.changed() {
+                            if self.default_path == "" {
+                                self.default_path = "screenshots".to_string();
+                            }
+                        }
+                    });
+                    ui.add_space(15.0);
+                    ui.horizontal(|ui| {
+                        ui.label(egui::RichText::new("Screenshots name: ").color(Color32::BLACK));
+                        if ui.button("Set default name").clicked() {
+                            self.default_name_selected = true;
+                            self.default_name = build_default_name();
+                        }
+                    });
+                    ui.horizontal(|ui| {
+                        ui.text_edit_singleline(&mut self.default_name);
+                        if ui.button("  Save  ").clicked() {
+                            self.default_name_selected = false;
+                        }
+                    });
+                    ui.separator();
+                    ui.add_space(20.0);
+                    ui.vertical_centered(|ui| {
                         if custom_button_with_font_size(
                             ui,
                             "  CLOSE SETTINGS  ",
@@ -1206,7 +1249,6 @@ impl App for AppUtility {
                             self.show_settings = false;
                         }
                     });
-                    ui.add_space(15.0);
                 });
         }
 
