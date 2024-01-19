@@ -355,7 +355,7 @@ impl App for AppUtility {
                 ..Default::default()
             })
             .default_rect(egui::Rect::from_center_size(
-                egui::Pos2::new(pos_central_x - 100.0, pos_central_y),
+                egui::Pos2::new(pos_central_x - 300.0, pos_central_y),
                 egui::Vec2::new(300.0, 30.0),
             ))
             .resizable(false)
@@ -1106,7 +1106,7 @@ impl App for AppUtility {
                 ..Default::default()
             })
             .default_rect(egui::Rect::from_center_size(
-                egui::Pos2::new(pos_central_x - 150.0, 300.0),
+                egui::Pos2::new(pos_central_x - 200.0, 250.0),
                 egui::Vec2::new(100.0, 100.0),
             ))
             .movable(true)
