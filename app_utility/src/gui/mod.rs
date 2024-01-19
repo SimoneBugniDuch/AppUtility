@@ -1331,26 +1331,28 @@ impl App for AppUtility {
             .open(&mut (self.timer.is_running() && !self.hide))
             .movable(false)
             .resizable(false)
-            .default_size(egui::vec2(100.0, 100.0))
+            .default_size(egui::vec2(500.0, 500.0))
             .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
             .frame(egui::Frame {
                 fill: egui::Color32::TRANSPARENT,
+                inner_margin: egui::Margin::same(10.0),
                 ..Default::default()
             })
             .show(ctx, |ui| {
+                
                 ui.label(
-                    egui::RichText::new(self.timer.seconds.to_string())
-                        .size(30.0)
-                        .color(egui::Color32::GOLD),
+                    egui::RichText::new(" ".to_owned() + &self.timer.seconds.to_string())
+                        .size(50.0)
+                        .color(egui::Color32::DARK_GRAY),
                 );
                 if self.timer.is_running() {
                     self.make_action(Action::ManageTimer, ctx, frame);
                 }
                 if custom_button(
                     ui,
-                    "CANCEL",
+                    "  CANCEL  ",
                     egui::Color32::DARK_GRAY,
-                    egui::Color32::YELLOW,
+                    egui::Color32::LIGHT_YELLOW,
                 )
                 .clicked()
                 {
