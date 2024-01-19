@@ -1305,7 +1305,7 @@ impl App for AppUtility {
                     if custom_button(
                         ui,
                         "  Save changes  ",
-                        egui::Color32::BLACK,
+                        egui::Color32::DARK_GRAY,
                         egui::Color32::from_rgb(252, 226, 174),
                     )
                     .clicked()
@@ -1352,7 +1352,7 @@ impl App for AppUtility {
                     ui,
                     "  CANCEL  ",
                     egui::Color32::DARK_GRAY,
-                    egui::Color32::LIGHT_YELLOW,
+                    egui::Color32::from_rgb(252, 226, 174),
                 )
                 .clicked()
                 {
