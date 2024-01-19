@@ -1308,7 +1308,7 @@ impl App for AppUtility {
                 }
                 if custom_button(
                     ui,
-                    "Cancel",
+                    "CANCEL",
                     egui::Color32::DARK_GRAY,
                     egui::Color32::YELLOW,
                 )
