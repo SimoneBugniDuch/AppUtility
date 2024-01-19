@@ -596,7 +596,11 @@ impl App for AppUtility {
                                 .clicked()
                             {
                                 //fare la modifica effettiva
-                                self.modifier = Modifier::Text;
+                                if self.modifier ==  Modifier::NotSelected{
+                                    self.modifier = Modifier::Text;
+                                }else if self.modifier == Modifier::Text{
+                                    self.modifier = Modifier::NotSelected;
+                                }
                             }
                             if self.modifier == Modifier::Text {
                                 egui::ScrollArea::vertical().min_scrolled_height(30.0).show(
@@ -616,6 +620,7 @@ impl App for AppUtility {
                                     self.modified_element.text_modified = true;
                                     self.modifications_vector.push(Modifier::Text);
                                 };
+                                
                             }
                             if ui.button("  ⛶  ").on_hover_text("Crop").clicked() {
                                 //fare la modifica effettiva
@@ -644,7 +649,6 @@ impl App for AppUtility {
                                 self.modified_element.circle.clear();
                                 self.modifications_vector.clear();
                                 self.modifier = Modifier::NotSelected;
-                                self.modification = false;
                             }
                             if ui.button("  Save  ").clicked() {
                                 let dim_img = resize_to_fit_container(
