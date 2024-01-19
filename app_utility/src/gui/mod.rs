@@ -1107,8 +1107,9 @@ impl App for AppUtility {
                 })
                 .default_rect(egui::Rect::from_center_size(
                     egui::Pos2::new(pos_central_x + 20.0, 100.0),
-                    egui::Vec2::new(800.0, 100.0),
+                    egui::Vec2::new(800.0, 400.0),
                 ))
+                .scroll2([false, true])
                 .movable(true)
                 .resizable(false)
                 .show(ctx, |ui| {
@@ -1179,12 +1180,11 @@ impl App for AppUtility {
 
                     ui.add_space(20.0);
 
-                    if custom_button_with_font_size(
+                    if custom_button(
                         ui,
                         "  SAVE SHOURTCUTS  ",
                         Color32::WHITE,
                         Color32::DARK_BLUE,
-                        15.0,
                     )
                     .clicked()
                     {
@@ -1305,7 +1305,7 @@ impl App for AppUtility {
                     if custom_button(
                         ui,
                         "  Save changes  ",
-                        egui::Color32::WHITE,
+                        egui::Color32::BLACK,
                         egui::Color32::from_rgb(252, 226, 174),
                     )
                     .clicked()
