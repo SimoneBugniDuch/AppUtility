@@ -21,7 +21,7 @@ use std::{
 use self::{
     actions::Action,
     screenshots::Screenshots,
-    shortcut::{AddedShortcut, AllShortcuts, ShortCut},
+    shortcut::{ AllShortcuts, ShortCut},
     timer::Timer,
 };
 
