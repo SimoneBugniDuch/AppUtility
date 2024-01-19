@@ -1,34 +1,9 @@
-use eframe::egui;
-use egui::{Modifiers, Key, KeyboardShortcut};
 use super::actions::Action;
+use eframe::egui;
+use egui::{Key, KeyboardShortcut, Modifiers};
 
-pub struct AddedShortcut {
-    pub modifiers: Modifiers,
-    pub key: Option<Key>,
-    default: bool,
-    pub action: Option<Action>,
-    pub description: String,
-}
 
-impl AddedShortcut {
-    pub fn default() -> Self {
-        Self {
-            modifiers: Modifiers {
-                alt: false,
-                ctrl: false,
-                shift: false,
-                mac_cmd: false,
-                command: false,
-            },
-            key: None,
-            default: true,
-            action: None,
-            description: String::from(""),
-        }
-    }
-}
-
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct ShortCut {
     pub name: String,
     pub description: String,
@@ -51,7 +26,8 @@ impl ShortCut {
     }
 
     fn shortcut_listener(&self, ctx: &egui::Context) -> Option<Action> {
-        if ctx.input_mut(|input_state| input_state.consume_shortcut(&self.shortcut)) && self.active {
+        if ctx.input_mut(|input_state| input_state.consume_shortcut(&self.shortcut)) && self.active
+        {
             Some(self.action)
         } else {
             None
@@ -61,26 +37,185 @@ impl ShortCut {
     fn toggle_active(&mut self) {
         self.active = !self.active;
     }
+
+    pub fn from_str_to_key(s: &str) -> Option<Key> {
+        match s {
+            "Down" => Some(Key::ArrowDown),
+            "Left" => Some(Key::ArrowLeft),
+            "Right" => Some(Key::ArrowRight),
+            "Up" => Some(Key::ArrowUp),
+            "Escape" => Some(Key::Escape),
+            "Tab" => Some(Key::Tab),
+            "Backspace" => Some(Key::Backspace),
+            "Enter" => Some(Key::Enter),
+            "Space" => Some(Key::Space),
+            "Insert" => Some(Key::Insert),
+            "Delete" => Some(Key::Delete),
+            "Home" => Some(Key::Home),
+            "End" => Some(Key::End),
+            "PageUp" => Some(Key::PageUp),
+            "PageDown" => Some(Key::PageDown),
+            "Minus" => Some(Key::Minus),
+            "Plus" => Some(Key::PlusEquals),
+            "0" => Some(Key::Num0),
+            "1" => Some(Key::Num1),
+            "2" => Some(Key::Num2),
+            "3" => Some(Key::Num3),
+            "4" => Some(Key::Num4),
+            "5" => Some(Key::Num5),
+            "6" => Some(Key::Num6),
+            "7" => Some(Key::Num7),
+            "8" => Some(Key::Num8),
+            "9" => Some(Key::Num9),
+            "A" => Some(Key::A),
+            "B" => Some(Key::B),
+            "C" => Some(Key::C),
+            "D" => Some(Key::D),
+            "E" => Some(Key::E),
+            "F" => Some(Key::F),
+            "G" => Some(Key::G),
+            "H" => Some(Key::H),
+            "I" => Some(Key::I),
+            "J" => Some(Key::J),
+            "K" => Some(Key::K),
+            "L" => Some(Key::L),
+            "M" => Some(Key::M),
+            "N" => Some(Key::N),
+            "O" => Some(Key::O),
+            "P" => Some(Key::P),
+            "Q" => Some(Key::Q),
+            "R" => Some(Key::R),
+            "S" => Some(Key::S),
+            "T" => Some(Key::T),
+            "U" => Some(Key::U),
+            "V" => Some(Key::V),
+            "W" => Some(Key::W),
+            "X" => Some(Key::X),
+            "Y" => Some(Key::Y),
+            "Z" => Some(Key::Z),
+            "F1" => Some(Key::F1),
+            "F2" => Some(Key::F2),
+            "F3" => Some(Key::F3),
+            "F4" => Some(Key::F4),
+            "F5" => Some(Key::F5),
+            "F6" => Some(Key::F6),
+            "F7" => Some(Key::F7),
+            "F8" => Some(Key::F8),
+            "F9" => Some(Key::F9),
+            "F10" => Some(Key::F10),
+            "F11" => Some(Key::F11),
+            "F12" => Some(Key::F12),
+            "F13" => Some(Key::F13),
+            "F14" => Some(Key::F14),
+            "F15" => Some(Key::F15),
+            "F16" => Some(Key::F16),
+            "F17" => Some(Key::F17),
+            "F18" => Some(Key::F18),
+            "F19" => Some(Key::F19),
+            "F20" => Some(Key::F20),
+            _ => None,
+        }
+    }
 }
 
+#[derive(Clone)]
 pub struct AllShortcuts {
     pub vec: Vec<ShortCut>,
     pub show: bool,
+    pub all_keys: Vec<String>,
 }
 
 impl AllShortcuts {
     pub fn default() -> Self {
         let mut vec = Vec::new();
-        vec.push(ShortCut::new(Modifiers::COMMAND, Key::C, "Copy to clipboard".to_string(), Action::Copy));
-        vec.push(ShortCut::new(Modifiers::COMMAND, Key::H, "Go to the home page".to_string(), Action::HomePage));
-        vec.push(ShortCut::new(Modifiers::COMMAND, Key::N, "Take a new screenshot".to_string(), Action::NewScreenshot));
-        vec.push(ShortCut::new(Modifiers::COMMAND, Key::S, "Save".to_string(), Action::Save));
-        vec.push(ShortCut::new(Modifiers::COMMAND, Key::W, "Close the application".to_string(), Action::Close));
-        vec.push(ShortCut::new(Modifiers::COMMAND, Key::Z, "Undo".to_string(), Action::Undo));
+        vec.push(ShortCut::new(
+            Modifiers::COMMAND,
+            Key::C,
+            "Copy to clipboard".to_string(),
+            Action::Copy,
+        ));
+        vec.push(ShortCut::new(
+            Modifiers::COMMAND,
+            Key::H,
+            "Go to the home page".to_string(),
+            Action::HomePage,
+        ));
+        vec.push(ShortCut::new(
+            Modifiers::COMMAND,
+            Key::N,
+            "Take a new screenshot".to_string(),
+            Action::NewScreenshot,
+        ));
+        vec.push(ShortCut::new(
+            Modifiers::COMMAND,
+            Key::S,
+            "Save".to_string(),
+            Action::Save,
+        ));
+        vec.push(ShortCut::new(
+            Modifiers::COMMAND,
+            Key::W,
+            "Close the application".to_string(),
+            Action::Close,
+        ));
+        vec.push(ShortCut::new(
+            Modifiers::COMMAND,
+            Key::Z,
+            "Undo".to_string(),
+            Action::Undo,
+        ));
+        vec.push(ShortCut::new(
+            Modifiers::COMMAND,
+            Key::K,
+            "Manage the timer".to_string(),
+            Action::ManageTimer,
+        ));
+        vec.push(ShortCut::new(
+            Modifiers::COMMAND,
+            Key::M,
+            "Modify the screenshot".to_string(),
+            Action::Modify,
+        ));
+        vec.push(ShortCut::new(
+            Modifiers::COMMAND,
+            Key::R,
+            "Reset the timer".to_string(),
+            Action::ResetTimer,
+        ));
+        vec.push(ShortCut::new(
+            Modifiers::COMMAND,
+            Key::T,
+            "Set the timer".to_string(),
+            Action::SetTimer,
+        ));
+        vec.push(ShortCut::new(
+            Modifiers::COMMAND,
+            Key::U,
+            "Start the timer".to_string(),
+            Action::StartTimer,
+        ));
+        vec.push(ShortCut::new(
+            Modifiers::COMMAND,
+            Key::Q,
+            "Open the settings".to_string(),
+            Action::Settings,
+        ));
+
         Self {
             vec,
             show: false,
+            all_keys: KeyboardKeys::all_keys(),
         }
+    }
+
+    pub fn is_default(shortcut: &AllShortcuts) -> bool {
+        let default_shortcuts = AllShortcuts::default();
+        for sc in default_shortcuts.vec {
+            if !shortcut.vec.contains(&sc) {
+                return false;
+            }
+        }
+        false
     }
 
     pub fn listener(&self, ctx: &egui::Context, image_viewing: bool) -> Option<Action> {
@@ -103,48 +238,18 @@ impl AllShortcuts {
         None
     }
 
-    pub fn save_new_shortcut(&mut self, new_shortcut: &mut AddedShortcut) -> Option<ShortCut> {
-        if let Some(_) = new_shortcut.action {
-            if let Some(_) = new_shortcut.key {
-                if !new_shortcut.modifiers.is_none() {
-                    let new_sct = ShortCut::new(new_shortcut.modifiers, new_shortcut.key.unwrap(), new_shortcut.description.clone(), new_shortcut.action.unwrap());
-                    for sc in self.vec.iter() {
-                        if sc.shortcut.eq(&new_sct.shortcut) {
-                            return None;
-                        }
-                    }
-                    self.vec.push(new_sct.clone());
-                    Some(new_sct.clone())
-                } else {
-                    None
+    // Check for duplicate shortcuts
+    pub fn has_duplicate_shortcuts(&self) -> bool {
+        for (i, shortcut1) in self.vec.iter().enumerate() {
+            for shortcut2 in self.vec.iter().skip(i + 1) {
+                if shortcut1.shortcut == shortcut2.shortcut {
+                    return true;
                 }
-            } else {
-                None
-            }
-        } else {
-            None
-        }
-    }
-
-    pub fn remove_shortcut(&mut self, shortcut: &mut ShortCut) {
-        let mut index = 0;
-        for (i, sc) in self.vec.iter().enumerate() {
-            if sc.shortcut.eq(&shortcut.shortcut) {
-                index = i;
             }
         }
-        self.vec.remove(index);
-    }
-
-    pub fn toggle_active(&mut self, shortcut: &mut ShortCut) {
-        for sc in self.vec.iter_mut() {
-            if sc.shortcut.eq(&shortcut.shortcut) {
-                sc.toggle_active();
-            }
-        }
+        false
     }
 }
-
 
 pub struct KeyboardKeys {
     pub keys: Vec<Key>,
@@ -153,7 +258,6 @@ impl KeyboardKeys {
     pub fn default() -> Self {
         Self {
             keys: vec![
-                
                 Key::A,
                 Key::B,
                 Key::C,
@@ -190,7 +294,6 @@ impl KeyboardKeys {
                 Key::Num7,
                 Key::Num8,
                 Key::Num9,
-                
                 Key::ArrowDown,
                 Key::ArrowLeft,
                 Key::ArrowRight,
@@ -230,5 +333,14 @@ impl KeyboardKeys {
                 Key::F20,
             ],
         }
+    }
+
+    fn all_keys() -> Vec<String> {
+        let mut vec = Vec::new();
+        let keys = KeyboardKeys::default().keys;
+        for key in keys {
+            vec.push(key.name().to_string());
+        }
+        vec
     }
 }
