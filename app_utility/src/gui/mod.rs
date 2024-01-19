@@ -6,7 +6,7 @@ mod timer;
 use arboard::{Clipboard, ImageData};
 use chrono::Local;
 use eframe::{
-    egui::{self, Color32, Layout, Sense, TextureHandle, Visuals, Window},
+    egui::{self, Color32, Key, Layout, Sense, TextureHandle, Visuals, Window},
     epaint::vec2,
     run_native, App, Frame,
 };
@@ -15,13 +15,13 @@ use native_dialog::FileDialog;
 use std::{
     borrow::Cow,
     fs,
-    time::{Duration, Instant}, any::Any,
+    time::{Duration, Instant},
 };
 
 use self::{
     actions::Action,
     screenshots::Screenshots,
-    shortcut::{AddedShortcut, AllShortcuts, KeyboardKeys},
+    shortcut::{AllShortcuts, ShortCut},
     timer::Timer,
 };
 
@@ -41,12 +41,12 @@ struct AppUtility {
     selecting_area: bool,
     selection_mode: Selection,
     shortcuts: AllShortcuts,
-    added_shortcut: AddedShortcut,
+    temp_shortcuts: AllShortcuts, // Temporary shortcuts for UI interaction
     show_settings: bool,
     texture: Option<TextureHandle>,
     timer: Timer,
     view_image: bool,
-    all_actions: Vec<Action>,
+    show_error: bool,
 }
 
 struct Rectangle {
@@ -119,12 +119,12 @@ impl AppUtility {
             selecting_area: false,
             selection_mode: Selection::Fullscreen,
             shortcuts: AllShortcuts::default(),
-            added_shortcut: AddedShortcut::default(),
-            all_actions: Action::all_actions(),
+            temp_shortcuts: AllShortcuts::default(), // Temporary shortcuts for UI interaction
             show_settings: false,
             texture: None,
             timer: Timer::new(),
             view_image: false,
+            show_error: false,
         }
     }
 
@@ -345,7 +345,7 @@ impl App for AppUtility {
             self.modifications_vector.clear();
             frame.set_visible(true);
         }
-        
+
         Window::new("home_page menu_bar")
             .title_bar(false)
             .frame(egui::Frame {
@@ -356,7 +356,7 @@ impl App for AppUtility {
                 ..Default::default()
             })
             .default_rect(egui::Rect::from_center_size(
-                egui::Pos2::new(pos_central_x , pos_central_y),
+                egui::Pos2::new(pos_central_x, pos_central_y),
                 egui::Vec2::new(300.0, 30.0),
             ))
             .anchor(egui::Align2::CENTER_TOP, [0.0, 15.0])
@@ -500,8 +500,7 @@ impl App for AppUtility {
                                 ui,
                                 "  Modify  ",
                                 Color32::WHITE,
-                                Color32::from_rgb(65, 105, 225)
-                                ,
+                                Color32::from_rgb(65, 105, 225),
                             )
                             .on_hover_text("Open the toolbar to modify the screenshot")
                             .clicked()
@@ -537,7 +536,7 @@ impl App for AppUtility {
                                 ui,
                                 "  New screenshot  ",
                                 Color32::WHITE,
-                                Color32::from_rgb(150, 150, 240)
+                                Color32::from_rgb(150, 150, 240),
                             )
                             .on_hover_text("Take a new screenshot going back to the home page")
                             .clicked()
@@ -570,14 +569,20 @@ impl App for AppUtility {
                                 self.make_action(Action::Close, ctx, frame);
                             }
                         } else {
-                            ui.selectable_value(&mut self.modifier, Modifier::Pen, " 🖊  ").on_hover_text("Draw");
-                            ui.selectable_value(&mut self.modifier, Modifier::Line, "  /  ").on_hover_text("Draw a line");
-                            ui.selectable_value(&mut self.modifier, Modifier::Arrow, "  ↖  ").on_hover_text("Draw an arrow");
-                            ui.selectable_value(&mut self.modifier, Modifier::Rect, "  ☐  ").on_hover_text("Draw a rectangle");
-                            ui.selectable_value(&mut self.modifier, Modifier::Circle, "  ⭕  ").on_hover_text("Draw a circle");
+                            ui.selectable_value(&mut self.modifier, Modifier::Pen, " 🖊  ")
+                                .on_hover_text("Draw");
+                            ui.selectable_value(&mut self.modifier, Modifier::Line, "  /  ")
+                                .on_hover_text("Draw a line");
+                            ui.selectable_value(&mut self.modifier, Modifier::Arrow, "  ↖  ")
+                                .on_hover_text("Draw an arrow");
+                            ui.selectable_value(&mut self.modifier, Modifier::Rect, "  ☐  ")
+                                .on_hover_text("Draw a rectangle");
+                            ui.selectable_value(&mut self.modifier, Modifier::Circle, "  ⭕  ")
+                                .on_hover_text("Draw a circle");
                             ui.label("|");
-                            ui.selectable_value(&mut self.modifier, Modifier::Text, "  T  ").on_hover_text("Write a text");
-                            
+                            ui.selectable_value(&mut self.modifier, Modifier::Text, "  T  ")
+                                .on_hover_text("Write a text");
+
                             if self.modifier == Modifier::Text {
                                 egui::ScrollArea::vertical().min_scrolled_height(30.0).show(
                                     ui,
@@ -600,10 +605,11 @@ impl App for AppUtility {
                                 if ui.button("  X  ").on_hover_text("Close text").clicked() {
                                     self.modifier = Modifier::NotSelected;
                                 };
-                            } 
+                            }
 
                             ui.label("|");
-                            ui.selectable_value(&mut self.modifier, Modifier::Crop, "  ⛶  ").on_hover_text(" Crop area ");
+                            ui.selectable_value(&mut self.modifier, Modifier::Crop, "  ⛶  ")
+                                .on_hover_text(" Crop area ");
 
                             if self.modifier == Modifier::Crop {
                                 if ui.button("  Save Crop ").clicked() {
@@ -619,7 +625,7 @@ impl App for AppUtility {
                             ui.label("|");
                             egui::stroke_ui(ui, &mut self.modified_element.stroke, "Stroke");
                             ui.label("|");
-                            
+
                             if ui.button("  ⟲  ").on_hover_text("undo").clicked() {
                                 self.make_action(Action::Undo, ctx, frame);
                             }
@@ -1088,87 +1094,192 @@ impl App for AppUtility {
             }
         }
 
-        Window::new("Settings:")
-            .open(&mut self.show_settings)
+        if self.show_settings && AllShortcuts::is_default(&self.temp_shortcuts) {
+            self.temp_shortcuts = self.shortcuts.clone();
+        }
+
+        if self.show_settings {
+            Window::new("Settings:")
+                .frame(egui::Frame {
+                    fill: window_default_color,
+                    stroke: egui::Stroke::new(0.5, egui::Color32::BLACK),
+                    inner_margin: egui::style::Margin::same(15.0),
+                    rounding: egui::Rounding::same(20.0),
+                    ..Default::default()
+                })
+                .default_rect(egui::Rect::from_center_size(
+                    egui::Pos2::new(pos_central_x + 20.0, 100.0),
+                    egui::Vec2::new(800.0, 100.0),
+                ))
+                .movable(true)
+                .resizable(false)
+                .show(ctx, |ui| {
+                    ui.add_space(20.0);
+                    ui.heading("Shortcuts settings: ");
+                    ui.separator();
+                    ui.add_space(10.0);
+                    egui::Grid::new("shortcut_grid")
+                        .spacing([25.0, 35.0])
+                        .striped(true)
+                        .show(ui, |ui| {
+                            ui.label("Shortcut Action");
+                            ui.label("Description");
+                            ui.label("Keyboard combination");
+                            ui.end_row();
+
+                            for new_shortcut in self.temp_shortcuts.vec.iter_mut() {
+                                // Dropdown menu to pick up the shortcut action name
+                                ui.label(&new_shortcut.name);
+
+                                ui.add_sized(
+                                    [300.0, 20.0],
+                                    egui::TextEdit::singleline(&mut new_shortcut.description)
+                                        .desired_rows(1),
+                                );
+
+                                ui.horizontal(|ui| {
+                                    ui.checkbox(&mut new_shortcut.shortcut.modifiers.alt, "");
+                                    let mut text = String::new();
+                                    if cfg!(target_os = "macos") {
+                                        text = "Option".to_string();
+                                    } else if cfg!(target_os = "windows") {
+                                        text = "Alt".to_string();
+                                    }
+                                    ui.label(text);
+
+                                    ui.checkbox(&mut new_shortcut.shortcut.modifiers.shift, "");
+                                    ui.label("Shift");
+
+                                    ui.checkbox(&mut new_shortcut.shortcut.modifiers.command, "");
+                                    text = String::new();
+                                    if cfg!(target_os = "macos") {
+                                        text = "Cmd".to_string();
+                                    } else if cfg!(target_os = "windows") {
+                                        text = "Ctrl".to_string();
+                                    }
+                                    ui.label(text);
+
+                                    // Dropdown menu for selecting a key
+                                    egui::ComboBox::from_id_source(format!(
+                                        "key_{}",
+                                        new_shortcut.name
+                                    )) // Unique ID for each row
+                                    .selected_text(Key::name(new_shortcut.shortcut.key))
+                                    .show_ui(ui, |ui| {
+                                        for key in &self.shortcuts.all_keys {
+                                            ui.selectable_value(
+                                                &mut new_shortcut.shortcut.key,
+                                                ShortCut::from_str_to_key(key).unwrap(),
+                                                key,
+                                            );
+                                        }
+                                    });
+                                });
+                                ui.end_row();
+                            }
+                        });
+
+                    ui.add_space(20.0);
+
+                    if custom_button_with_font_size(
+                        ui,
+                        "  SAVE SHOURTCUTS  ",
+                        Color32::WHITE,
+                        Color32::DARK_BLUE,
+                        15.0,
+                    )
+                    .clicked()
+                    {
+                        // clone the temp_shortcuts into the shortcuts but only if the shortcuts are valid (no actions with the same shortcut combination )
+                        // if the shortcuts are not valid, show a popup with the error
+                        if !self.temp_shortcuts.has_duplicate_shortcuts() {
+                            self.shortcuts = self.temp_shortcuts.clone();
+                            self.show_settings = false;
+                        } else {
+                            self.show_error = true;
+                        }
+                    }
+                    ui.add_space(25.0);
+
+                    ui.separator();
+                    ui.add_space(10.0);
+                    ui.heading("Location and name");
+                    ui.add_space(20.0);
+                    ui.label(egui::RichText::new("Screenshots path: ").color(Color32::BLACK));
+                    ui.horizontal(|ui| {
+                        let set_path_text = ui.text_edit_singleline(&mut self.default_path);
+                        if ui.button("Change").clicked() {
+                            let result = FileDialog::new().show_open_single_dir().unwrap();
+                            if result.is_some() {
+                                self.default_path = result.unwrap().to_string_lossy().to_string();
+                            }
+                        }
+                        if set_path_text.changed() {
+                            if self.default_path == "" {
+                                self.default_path = "screenshots".to_string();
+                            }
+                        }
+                    });
+                    ui.add_space(15.0);
+                    ui.horizontal(|ui| {
+                        ui.label(egui::RichText::new("Screenshots name: ").color(Color32::BLACK));
+                        if ui.button("Set default name").clicked() {
+                            self.default_name_selected = true;
+                            self.default_name = build_default_name();
+                        }
+                    });
+                    ui.horizontal(|ui| {
+                        ui.text_edit_singleline(&mut self.default_name);
+                        if ui.button("  Save  ").clicked() {
+                            self.default_name_selected = false;
+                        }
+                    });
+                    ui.separator();
+                    ui.add_space(20.0);
+                    ui.vertical_centered(|ui| {
+                        if custom_button_with_font_size(
+                            ui,
+                            "  CLOSE SETTINGS  ",
+                            Color32::WHITE,
+                            Color32::LIGHT_RED,
+                            15.0,
+                        )
+                        .clicked()
+                        {
+                            self.show_settings = false;
+                        }
+                    });
+                });
+        }
+
+        // Reset temp_shortcuts when settings window is closed
+        if !self.show_settings {
+            self.temp_shortcuts = self.shortcuts.clone();
+        }
+
+        Window::new("Error")
+            .title_bar(true)
+            .open(&mut self.show_error)
+            .resizable(false)
+            .movable(true)
             .frame(egui::Frame {
-                fill: window_default_color,
-                stroke: egui::Stroke::new(0.5, egui::Color32::BLACK),
+                fill: Color32::RED,
+                stroke: egui::Stroke::new(0.5, egui::Color32::WHITE),
                 inner_margin: egui::style::Margin::same(15.0),
                 rounding: egui::Rounding::same(20.0),
                 ..Default::default()
             })
             .default_rect(egui::Rect::from_center_size(
-                egui::Pos2::new(pos_central_x - 200.0, 250.0),
-                egui::Vec2::new(100.0, 100.0),
+                egui::Pos2::new(pos_central_x + 70.0, 300.0),
+                egui::Vec2::new(500.0, 70.0),
             ))
-            .movable(true)
-            .resizable(false)
             .show(ctx, |ui| {
                 ui.add_space(20.0);
-                ui.heading("Shortcuts settings: ");
-                ui.separator();
+                ui.colored_label(
+                    Color32::WHITE,
+                    "Error: there are some actions with the same shortcut combination",
+                );
                 ui.add_space(10.0);
-                egui::Grid::new("shortcut_grid")
-                    .spacing([10.0, 15.0])
-                    .striped(true)
-                    .show(ui, |ui| {
-                        ui.label("Shortcut Name");
-                        ui.label("Description");
-                        ui.label("Keyboard combination");
-                        ui.label("Actions");
-                        ui.end_row();
-
-                        
-                        for (index, shortcut) in self.shortcuts.vec.iter_mut().enumerate() {
-                            // Dropdown menu to pick up the shortcut action name
-                            egui::ComboBox::from_id_source(format!("{}{}", shortcut.name, index))
-                                .selected_text(
-                                    shortcut.name.clone()
-                                )
-                                .show_ui(ui, |ui| {
-                                    for action in &self.all_actions {
-                                        let txt = format!("{}", action.to_string());
-                                        ui.selectable_value(
-                                            &mut shortcut.name,
-                                            action.to_string(),
-                                            txt,
-                                        );
-                                    }
-                                });    
-
-                            ui.add_sized(
-                                [300.0, 10.0],
-                                egui::TextEdit::singleline(&mut shortcut.description).desired_rows(1),
-                            );
-
-                            
-                            // Buttons for save and delete
-                            ui.horizontal(|ui| {
-                                if custom_button(
-                                    ui,
-                                    " save  ",
-                                    Color32::WHITE,
-                                    Color32::from_rgb(210, 69, 69),
-                                )
-                                .clicked()
-                                {
-                                    // Save logic here
-                                }
-                                if custom_button(
-                                    ui,
-                                    " delete  ",
-                                    Color32::WHITE,
-                                    Color32::from_rgb(210, 69, 69),
-                                )
-                                .clicked()
-                                {
-                                    // Delete logic here
-                                }
-                            });
-
-                            ui.end_row();
-                        }
-                    });
             });
 
         Window::new("Timer form")
@@ -1196,7 +1307,7 @@ impl App for AppUtility {
                     if custom_button(
                         ui,
                         "  Save changes  ",
-                        egui::Color32::DARK_GRAY,
+                        egui::Color32::WHITE,
                         egui::Color32::from_rgb(252, 226, 174),
                     )
                     .clicked()
@@ -1207,7 +1318,7 @@ impl App for AppUtility {
                     if custom_button(
                         ui,
                         "  Reset  ",
-                        egui::Color32::DARK_GRAY,
+                        egui::Color32::WHITE,
                         egui::Color32::LIGHT_RED,
                     )
                     .clicked()
@@ -1251,12 +1362,6 @@ impl App for AppUtility {
                 }
             });
     }
-}
-
-fn calc_center_position(ctx: &egui::Context, window_width: f32, pos_y: f32) -> egui::Pos2 {
-    let screen_width = ctx.available_rect().width(); // Set the screen width
-    let window_x = (screen_width - window_width) / 2.0; // Centered x-coordinate
-    egui::pos2(window_x, pos_y) // Return the position
 }
 
 // Version with font_size

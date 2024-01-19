@@ -58,24 +58,4 @@ impl Action {
         }
     }
 
-    // implement a pub method that return an array object of all the actions
-    pub fn all_actions() -> Vec<Action> {
-        vec![
-            Action::Capture,
-            Action::Copy,
-            Action::Close,
-            Action::HomePage,
-            Action::ManageTimer,
-            Action::Modify,
-            Action::NewScreenshot,
-            Action::ResetTimer,
-            Action::Save,
-            Action::SelectArea,
-            Action::SelectFullscreen,
-            Action::Settings,
-            Action::SetTimer,
-            Action::StartTimer,
-            Action::Undo,
-        ]
-    }
 }
