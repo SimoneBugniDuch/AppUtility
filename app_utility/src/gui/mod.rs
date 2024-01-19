@@ -163,9 +163,10 @@ impl AppUtility {
                 {
                     self.timer.decrement_timer();
                     if self.timer.seconds == 0 {
-                        self.timer.reset_timer();
-                        self.hide = true;
-                        frame.set_visible(false);
+                        // self.timer.reset_timer();
+                        // self.hide = true;
+                        // frame.set_visible(false);
+                        self.make_action(Action::Capture, ctx, frame);
                     }
                     self.timer.start_instant = Some(now);
                 }
@@ -344,7 +345,7 @@ impl App for AppUtility {
             self.modifications_vector.clear();
             frame.set_visible(true);
         }
-
+        
         Window::new("home_page menu_bar")
             .title_bar(false)
             .frame(egui::Frame {
@@ -355,9 +356,10 @@ impl App for AppUtility {
                 ..Default::default()
             })
             .default_rect(egui::Rect::from_center_size(
-                egui::Pos2::new(pos_central_x - 100.0, pos_central_y),
+                egui::Pos2::new(pos_central_x , pos_central_y),
                 egui::Vec2::new(300.0, 30.0),
             ))
+            .anchor(egui::Align2::CENTER_TOP, [0.0, 15.0])
             .resizable(false)
             .open(
                 &mut (!self.view_image
@@ -462,7 +464,8 @@ impl App for AppUtility {
         Window::new("screenshot_taken toolbar")
             //TODO: QUI BISOGNA INSERIRE I BOTTONI DI MODIFICA, DI COPIA ECC...
             .title_bar(false)
-            .open(&mut self.view_image.clone())
+            .anchor(egui::Align2::CENTER_TOP, [0.0, 15.0])
+            .open(&mut (self.view_image.clone() && !self.show_settings))
             .frame(egui::Frame {
                 fill: window_default_color,
                 stroke: egui::Stroke::new(0.5, egui::Color32::GRAY),
@@ -497,7 +500,8 @@ impl App for AppUtility {
                                 ui,
                                 "  Modify  ",
                                 Color32::WHITE,
-                                Color32::from_rgb(122, 229, 130),
+                                Color32::from_rgb(65, 105, 225)
+                                ,
                             )
                             .on_hover_text("Open the toolbar to modify the screenshot")
                             .clicked()
@@ -509,7 +513,7 @@ impl App for AppUtility {
                                 ui,
                                 "  Copy  ",
                                 Color32::WHITE,
-                                Color32::from_rgb(207, 191, 247),
+                                Color32::from_rgb(100, 149, 237),
                             )
                             .on_hover_text("Copy the screenshot to the clipboard")
                             .clicked()
@@ -521,7 +525,7 @@ impl App for AppUtility {
                                 ui,
                                 "  Save  ",
                                 Color32::WHITE,
-                                Color32::from_rgb(54, 82, 173),
+                                Color32::from_rgb(112, 170, 230),
                             )
                             .on_hover_text("Save the screenshot")
                             .clicked()
@@ -533,7 +537,7 @@ impl App for AppUtility {
                                 ui,
                                 "  New screenshot  ",
                                 Color32::WHITE,
-                                Color32::LIGHT_RED,
+                                Color32::from_rgb(150, 150, 240)
                             )
                             .on_hover_text("Take a new screenshot going back to the home page")
                             .clicked()
@@ -558,7 +562,7 @@ impl App for AppUtility {
                                 ui,
                                 "  x  ",
                                 egui::Color32::WHITE,
-                                egui::Color32::from_rgb(210, 69, 69),
+                                egui::Color32::from_rgb(205, 92, 92),
                             )
                             .on_hover_text("Close the app")
                             .clicked()
@@ -566,38 +570,14 @@ impl App for AppUtility {
                                 self.make_action(Action::Close, ctx, frame);
                             }
                         } else {
-                            if ui.button(" 🖊  ").on_hover_text("Draw").clicked() {
-                                //fare la modifica effettiva
-                                self.modifier = Modifier::Pen;
-                            }
-                            if ui.button("  /  ").on_hover_text("Draw a line").clicked() {
-                                //fare la modifica effettiva
-                                self.modifier = Modifier::Line;
-                            }
-                            if ui.button("  ↖  ").on_hover_text("Draw an arrow").clicked() {
-                                //fare la modifica effettiva
-                                self.modifier = Modifier::Arrow;
-                            }
-                            if ui
-                                .button("  ☐  ")
-                                .on_hover_text("Draw a rectangle")
-                                .clicked()
-                            {
-                                //fare la modifica effettiva
-                                self.modifier = Modifier::Rect;
-                            }
-                            if ui.button("  ⭕  ").on_hover_text("Draw a circle").clicked() {
-                                //fare la modifica effettiva
-                                self.modifier = Modifier::Circle;
-                            }
-                            if ui
-                                .button("  Text  ")
-                                .on_hover_text("Write a text")
-                                .clicked()
-                            {
-                                //fare la modifica effettiva
-                                self.modifier = Modifier::Text;
-                            }
+                            ui.selectable_value(&mut self.modifier, Modifier::Pen, " 🖊  ").on_hover_text("Draw");
+                            ui.selectable_value(&mut self.modifier, Modifier::Line, "  /  ").on_hover_text("Draw a line");
+                            ui.selectable_value(&mut self.modifier, Modifier::Arrow, "  ↖  ").on_hover_text("Draw an arrow");
+                            ui.selectable_value(&mut self.modifier, Modifier::Rect, "  ☐  ").on_hover_text("Draw a rectangle");
+                            ui.selectable_value(&mut self.modifier, Modifier::Circle, "  ⭕  ").on_hover_text("Draw a circle");
+                            ui.label("|");
+                            ui.selectable_value(&mut self.modifier, Modifier::Text, "  T  ").on_hover_text("Write a text");
+                            
                             if self.modifier == Modifier::Text {
                                 egui::ScrollArea::vertical().min_scrolled_height(30.0).show(
                                     ui,
@@ -607,27 +587,39 @@ impl App for AppUtility {
                                                 &mut self.modified_element.text,
                                             )
                                             .desired_rows(1)
-                                            .desired_width(500.0),
+                                            .desired_width(100.0)
+                                            .hint_text("Example"),
                                         );
                                     },
                                 );
 
-                                if ui.button("  Save text  ").clicked() {
+                                if ui.button("  Save text ").clicked() {
                                     self.modified_element.text_modified = true;
                                     self.modifications_vector.push(Modifier::Text);
                                 };
-                            }
-                            if ui.button("  ⛶  ").on_hover_text("Crop").clicked() {
-                                //fare la modifica effettiva
-                                self.modifier = Modifier::Crop;
-                            }
-                            if self.modifier == Modifier::Crop {
-                                if ui.button("  Save crop  ").clicked() {
+                                if ui.button("  X  ").on_hover_text("Close text").clicked() {
                                     self.modifier = Modifier::NotSelected;
+                                };
+                            } 
+
+                            ui.label("|");
+                            ui.selectable_value(&mut self.modifier, Modifier::Crop, "  ⛶  ").on_hover_text(" Crop area ");
+
+                            if self.modifier == Modifier::Crop {
+                                if ui.button("  Save Crop ").clicked() {
+                                    self.modifier = Modifier::NotSelected;
+                                    self.selection_mode = Selection::Area;
+                                    println!("I've cropped");
                                     self.hide = true;
                                 }
+                                if ui.button("  X  ").on_hover_text("Close crop").clicked() {
+                                    self.modifier = Modifier::NotSelected;
+                                }
                             }
+                            ui.label("|");
                             egui::stroke_ui(ui, &mut self.modified_element.stroke, "Stroke");
+                            ui.label("|");
+                            
                             if ui.button("  ⟲  ").on_hover_text("undo").clicked() {
                                 self.make_action(Action::Undo, ctx, frame);
                             }
@@ -644,7 +636,6 @@ impl App for AppUtility {
                                 self.modified_element.circle.clear();
                                 self.modifications_vector.clear();
                                 self.modifier = Modifier::NotSelected;
-                                self.modification = false;
                             }
                             if ui.button("  Save  ").clicked() {
                                 let dim_img = resize_to_fit_container(
@@ -666,6 +657,7 @@ impl App for AppUtility {
                                     height: dim_img.1 * adj,
                                 };
                                 self.modifier = Modifier::NotSelected;
+                                self.selection_mode = Selection::Area;
                                 self.hide = true;
                             }
                             if ui.button("  X  ").on_hover_text("Close").clicked() {
