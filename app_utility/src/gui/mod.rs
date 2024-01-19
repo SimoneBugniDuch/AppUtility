@@ -235,8 +235,10 @@ impl AppUtility {
                 }
             }
             Action::SelectArea => {
-                self.selection_mode = Selection::Area;
-                self.selecting_area = true;
+                if self.screenshots.default {
+                    self.selection_mode = Selection::Area;
+                    self.selecting_area = true;
+                }
             }
             Action::SelectFullscreen => {
                 self.selection_mode = Selection::Fullscreen;
@@ -404,18 +406,21 @@ impl App for AppUtility {
                             }
 
                             ui.add_space(10.0);
-                            if custom_button(
-                                ui,
-                                "⛶  Area shot",
-                                egui::Color32::WHITE,
-                                egui::Color32::from_rgb(142, 167, 233),
-                            )
-                            .on_hover_text("Take a screenshot of an area")
-                            .clicked()
-                            {
-                                self.make_action(Action::SelectArea, ctx, frame);
-                                println!("You want an area shot?");
-                            }
+                            ui.add_enabled_ui(self.screenshots.default, 
+                                |ui| {
+                                if custom_button(
+                                    ui,
+                                    "⛶  Area shot",
+                                    egui::Color32::WHITE,
+                                    egui::Color32::from_rgb(142, 167, 233),
+                                )
+                                .on_hover_text("Take a screenshot of an area")
+                                .clicked()
+                                {
+                                    self.make_action(Action::SelectArea, ctx, frame);
+                                    println!("You want an area shot?");
+                                }
+                            });
 
                             ui.add_space(10.0);
                             if custom_button(
