@@ -163,9 +163,10 @@ impl AppUtility {
                 {
                     self.timer.decrement_timer();
                     if self.timer.seconds == 0 {
-                        self.timer.reset_timer();
-                        self.hide = true;
-                        frame.set_visible(false);
+                        // self.timer.reset_timer();
+                        // self.hide = true;
+                        // frame.set_visible(false);
+                        self.make_action(Action::Capture, ctx, frame);
                     }
                     self.timer.start_instant = Some(now);
                 }
@@ -462,7 +463,8 @@ impl App for AppUtility {
         Window::new("screenshot_taken toolbar")
             //TODO: QUI BISOGNA INSERIRE I BOTTONI DI MODIFICA, DI COPIA ECC...
             .title_bar(false)
-            .open(&mut self.view_image.clone())
+            .anchor(egui::Align2::CENTER_TOP, [0.0, 0.0])
+            .open(&mut (self.view_image.clone() && !self.show_settings))
             .frame(egui::Frame {
                 fill: window_default_color,
                 stroke: egui::Stroke::new(0.5, egui::Color32::GRAY),
@@ -611,7 +613,8 @@ impl App for AppUtility {
                                                 &mut self.modified_element.text,
                                             )
                                             .desired_rows(1)
-                                            .desired_width(500.0),
+                                            .desired_width(100.0)
+                                            .hint_text("Example"),
                                         );
                                     },
                                 );
@@ -670,6 +673,8 @@ impl App for AppUtility {
                                     height: dim_img.1 * adj,
                                 };
                                 self.modifier = Modifier::NotSelected;
+                                self.selection_mode = Selection::Area;
+                                println!("I've cropped");
                                 self.hide = true;
                             }
                             if ui.button("  X  ").on_hover_text("Close").clicked() {
