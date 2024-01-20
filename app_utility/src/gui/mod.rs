@@ -406,8 +406,7 @@ impl App for AppUtility {
                             }
 
                             ui.add_space(10.0);
-                            ui.add_enabled_ui(self.screenshots.default, 
-                                |ui| {
+                            ui.add_enabled_ui(self.screenshots.default, |ui| {
                                 if custom_button(
                                     ui,
                                     "⛶  Area shot",
@@ -1103,6 +1102,7 @@ impl App for AppUtility {
 
         if self.show_settings {
             Window::new("Settings:")
+                .title_bar(false)
                 .frame(egui::Frame {
                     fill: window_default_color,
                     stroke: egui::Stroke::new(0.5, egui::Color32::BLACK),
@@ -1110,15 +1110,110 @@ impl App for AppUtility {
                     rounding: egui::Rounding::same(20.0),
                     ..Default::default()
                 })
-                .default_rect(egui::Rect::from_center_size(
-                    egui::Pos2::new(pos_central_x + 20.0, 100.0),
-                    egui::Vec2::new(700.0, 500.0),
-                ))
                 .scroll2([false, true])
+                .default_size(egui::Vec2::new(750.0, 600.0))
+                .default_pos(egui::Pos2::new(pos_central_x - 300.0, 40.0))
                 .movable(true)
                 .resizable(false)
                 .show(ctx, |ui| {
+                    // Custom title bar
+                    ui.horizontal(|ui| {
+                        ui.heading("Settings:"); // Custom title
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            if custom_button(
+                                ui,
+                                "  x  ",
+                                Color32::WHITE,
+                                Color32::from_rgb(210, 69, 69),
+                            )
+                            .clicked()
+                            {
+                                self.show_settings = false; // Close the window
+                            }
+                        });
+                    });
+
+                    ui.separator();
                     ui.add_space(20.0);
+                    ui.heading("Location and name settings:");
+                    ui.separator();
+                    ui.add_space(20.0);
+
+                    ui.colored_label(Color32::BLACK, "Saving path for the screenshot: ");
+                    ui.horizontal(|ui| {
+                        let set_path_text = ui.text_edit_singleline(&mut self.default_path);
+                        if custom_button(
+                            ui,
+                            "  change path  ",
+                            Color32::WHITE,
+                            egui::Color32::from_rgb(114, 134, 211),
+                        )
+                        .clicked()
+                        {
+                            let result = FileDialog::new().show_open_single_dir().unwrap();
+                            if result.is_some() {
+                                self.default_path = result.unwrap().to_string_lossy().to_string();
+                            }
+                        }
+                        if set_path_text.changed() {
+                            if self.default_path == "" {
+                                self.default_path = "screenshots".to_string();
+                            }
+                        }
+                    });
+                    ui.add_space(15.0);
+                    ui.colored_label(Color32::BLACK, "Default name for the screenshot: ");
+
+                    ui.horizontal(|ui| {
+                        ui.text_edit_singleline(&mut self.default_name);
+                        if custom_button(
+                            ui,
+                            "  save name  ",
+                            Color32::WHITE,
+                            egui::Color32::from_rgb(114, 134, 211),
+                        )
+                        .clicked()
+                        {
+                            self.default_name_selected = false;
+                        }
+                        if custom_button(
+                            ui,
+                            "  reset to default name  ",
+                            Color32::WHITE,
+                            egui::Color32::from_rgb(114, 134, 211),
+                        )
+                        .clicked()
+                        {
+                            self.default_name_selected = true;
+                            self.default_name = build_default_name();
+                        }
+                    });
+                    ui.add_space(10.0);
+                    ui.separator();
+                    ui.add_space(20.0);
+
+                    ui.heading("Change screen numeber settings:");
+                    ui.separator();
+                    ui.add_space(10.0);
+                    egui::ComboBox::from_id_source("screens_selection")
+                        .selected_text(format!(
+                            "Selected screen: {}",
+                            self.screenshots.screen_number
+                        ))
+                        .show_ui(ui, |ui| {
+                            for i in 0..self.screenshots.total_screens() {
+                                let txt = format!("Screen number {}", i);
+                                ui.selectable_value(&mut self.screenshots.screen_number, i, txt);
+                            }
+                        });
+                    ui.add_space(10.0);
+                    ui.separator();
+                    ui.add_space(25.0);
+                    // if self.schermi.screen_no != self.schermi.default_screen_no {
+                    //     self.mode_radio = SelectionMode::Screen;
+                    //     self.mode = false;
+                    // }
+
                     ui.heading("Shortcuts settings: ");
                     ui.separator();
                     ui.add_space(10.0);
@@ -1203,54 +1298,6 @@ impl App for AppUtility {
                         }
                     }
                     ui.add_space(25.0);
-
-                    ui.separator();
-                    ui.add_space(10.0);
-                    ui.heading("Location and name");
-                    ui.add_space(20.0);
-                    ui.label(egui::RichText::new("Screenshots path: ").color(Color32::BLACK));
-                    ui.horizontal(|ui| {
-                        let set_path_text = ui.text_edit_singleline(&mut self.default_path);
-                        if ui.button("Change").clicked() {
-                            let result = FileDialog::new().show_open_single_dir().unwrap();
-                            if result.is_some() {
-                                self.default_path = result.unwrap().to_string_lossy().to_string();
-                            }
-                        }
-                        if set_path_text.changed() {
-                            if self.default_path == "" {
-                                self.default_path = "screenshots".to_string();
-                            }
-                        }
-                    });
-                    ui.add_space(15.0);
-                    ui.horizontal(|ui| {
-                        ui.label(egui::RichText::new("Screenshots name: ").color(Color32::BLACK));
-                        if ui.button("Set default name").clicked() {
-                            self.default_name_selected = true;
-                            self.default_name = build_default_name();
-                        }
-                    });
-                    ui.horizontal(|ui| {
-                        ui.text_edit_singleline(&mut self.default_name);
-                        if ui.button("  Save  ").clicked() {
-                            self.default_name_selected = false;
-                        }
-                    });
-                    ui.separator();
-                    ui.add_space(20.0);
-                    ui.vertical_centered(|ui| {
-                        if custom_button(
-                            ui,
-                            "  CLOSE SETTINGS  ",
-                            Color32::WHITE,
-                            Color32::LIGHT_RED,
-                        )
-                        .clicked()
-                        {
-                            self.show_settings = false;
-                        }
-                    });
                 });
         }
 
@@ -1343,7 +1390,6 @@ impl App for AppUtility {
                 ..Default::default()
             })
             .show(ctx, |ui| {
-                
                 ui.label(
                     egui::RichText::new(" ".to_owned() + &self.timer.seconds.to_string())
                         .size(50.0)

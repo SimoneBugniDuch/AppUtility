@@ -3,7 +3,7 @@ use screenshots::Screen;
 
 pub struct Screenshots {
     screenshots: Vec<Screen>,
-    screen_number: usize,
+    pub screen_number: usize,
     pub default: bool,
     default_screen_number: usize,
 }
