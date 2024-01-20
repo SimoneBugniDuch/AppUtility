@@ -39,11 +39,6 @@ impl Timer {
         self.seconds -= 1;
     }
 
-    pub fn stop_timer(&mut self) {
-        self.seconds = 0;
-        self.running = false;
-    }
-
     pub fn reset_timer(&mut self) {
         self.seconds = 0;
         self.form_open = false;

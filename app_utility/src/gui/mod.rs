@@ -1210,10 +1210,13 @@ impl App for AppUtility {
                     ui.add_space(10.0);
                     ui.separator();
                     ui.add_space(25.0);
-                    // if self.schermi.screen_no != self.schermi.default_screen_no {
-                    //     self.mode_radio = SelectionMode::Screen;
-                    //     self.mode = false;
-                    // }
+                    if self.screenshots.screen_number != self.screenshots.default_screen_number {
+                        self.selection_mode = Selection::Fullscreen;
+                        self.selecting_area = false;
+                        self.screenshots.default = false;
+                    } else {
+                        self.screenshots.default = true;
+                    }
 
                     ui.heading("Shortcuts settings: ");
                     ui.separator();

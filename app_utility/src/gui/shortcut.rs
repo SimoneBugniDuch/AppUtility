@@ -34,10 +34,6 @@ impl ShortCut {
         }
     }
 
-    fn toggle_active(&mut self) {
-        self.active = !self.active;
-    }
-
     pub fn from_str_to_key(s: &str) -> Option<Key> {
         match s {
             "Down" => Some(Key::ArrowDown),
