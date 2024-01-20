@@ -93,7 +93,7 @@ impl AppUtility {
             default_name: build_default_name(),
             default_name_selected: true,
             default_number: 0,
-            default_path: "screenshot".to_string(),
+            default_path: "screenshots".to_string(),
             hide: false,
             modification: false,
             modifications_vector: Default::default(),
@@ -196,7 +196,7 @@ impl AppUtility {
             }
             Action::Save => {
                 let mut filename = build_default_name();
-                if self.default_name_selected {
+                if !self.default_name_selected {
                     if self.default_number != 0 {
                         filename = format!("{}_{}", self.default_name, self.default_number);
                         self.default_number += 1;
@@ -1144,7 +1144,7 @@ impl App for AppUtility {
                         let set_path_text = ui.text_edit_singleline(&mut self.default_path);
                         if custom_button(
                             ui,
-                            "  change path  ",
+                            "  Change path  ",
                             Color32::WHITE,
                             egui::Color32::from_rgb(114, 134, 211),
                         )
@@ -1168,17 +1168,18 @@ impl App for AppUtility {
                         ui.text_edit_singleline(&mut self.default_name);
                         if custom_button(
                             ui,
-                            "  save name  ",
+                            "  Save name  ",
                             Color32::WHITE,
                             egui::Color32::from_rgb(114, 134, 211),
                         )
                         .clicked()
                         {
                             self.default_name_selected = false;
+                            self.show_settings = false;
                         }
                         if custom_button(
                             ui,
-                            "  reset to default name  ",
+                            "  Reset to default name  ",
                             Color32::WHITE,
                             egui::Color32::from_rgb(114, 134, 211),
                         )
@@ -1282,7 +1283,7 @@ impl App for AppUtility {
 
                     if custom_button(
                         ui,
-                        "  SAVE SHOURTCUTS  ",
+                        "  Save shortcuts  ",
                         Color32::WHITE,
                         egui::Color32::from_rgb(114, 134, 211),
                     )
