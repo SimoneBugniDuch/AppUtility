@@ -160,12 +160,12 @@ impl AllShortcuts {
             "Undo".to_string(),
             Action::Undo,
         ));
-        vec.push(ShortCut::new(
-            Modifiers::COMMAND,
-            Key::K,
-            "Manage the timer".to_string(),
-            Action::ManageTimer,
-        ));
+        // vec.push(ShortCut::new(
+        //     Modifiers::COMMAND,
+        //     Key::K,
+        //     "Manage the timer".to_string(),
+        //     Action::ManageTimer,
+        // ));
         vec.push(ShortCut::new(
             Modifiers::COMMAND,
             Key::M,
@@ -193,7 +193,7 @@ impl AllShortcuts {
         vec.push(ShortCut::new(
             Modifiers::COMMAND,
             Key::Q,
-            "Open the settings".to_string(),
+            "Open the settings menu".to_string(),
             Action::Settings,
         ));
 
@@ -214,9 +214,9 @@ impl AllShortcuts {
         false
     }
 
-    pub fn listener(&self, ctx: &egui::Context, image_viewing: bool) -> Option<Action> {
+    pub fn listener(&self, ctx: &egui::Context, image_viewing: bool, selecting_area: bool) -> Option<Action> {
         for shortcut in self.vec.iter() {
-            if shortcut.action == Action::Settings || shortcut.action == Action::Close {
+            if shortcut.action == Action::Settings || shortcut.action == Action::Close || (shortcut.action == Action::HomePage && selecting_area) {
                 if shortcut.active {
                     if let Some(action) = shortcut.shortcut_listener(ctx) {
                         return Some(action);

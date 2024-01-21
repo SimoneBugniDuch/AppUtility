@@ -306,7 +306,7 @@ impl App for AppUtility {
         let window_default_color = Color32::LIGHT_BLUE;
 
         if self.hide {
-            println!("Now I'm hiding");
+            // println!("Now I'm hiding");
             std::thread::sleep(Duration::from_millis(300));
             let screen = self.screenshots.get_screen();
             let img;
@@ -320,11 +320,11 @@ impl App for AppUtility {
                             self.rectangle.height.floor() as u32,
                         )
                         .unwrap();
-                    println!("Capturing area screen!");
+                    // println!("Capturing area screen!");
                 }
                 Selection::Fullscreen => {
                     img = screen.capture().unwrap();
-                    println!("Capturing screen!");
+                    // println!("Capturing screen!");
                 }
             }
             self.buffer = Some(img.to_png(None).unwrap());
@@ -381,7 +381,7 @@ impl App for AppUtility {
                         cross_justify: true,
                     },
                     |ui| {
-                        match self.shortcuts.listener(ctx, self.view_image) {
+                        match self.shortcuts.listener(ctx, self.view_image, self.selecting_area) {
                             Some(action) => self.make_action(action, ctx, frame),
                             None => {}
                         }
@@ -401,7 +401,7 @@ impl App for AppUtility {
                             .clicked()
                             {
                                 self.make_action(Action::SelectFullscreen, ctx, frame);
-                                println!("Capture clicked");
+                                // println!("Capture clicked");
                                 self.make_action(Action::StartTimer, ctx, frame);
                             }
 
@@ -417,7 +417,7 @@ impl App for AppUtility {
                                 .clicked()
                                 {
                                     self.make_action(Action::SelectArea, ctx, frame);
-                                    println!("You want an area shot?");
+                                    // println!("You want an area shot?");
                                 }
                             });
 
@@ -493,13 +493,13 @@ impl App for AppUtility {
                         cross_justify: true,
                     },
                     |ui| {
-                        match self.shortcuts.listener(ctx, self.view_image) {
+                        match self.shortcuts.listener(ctx, self.view_image, self.selecting_area) {
                             Some(action) => self.make_action(action, ctx, frame),
                             None => {}
                         }
 
                         if self.view_image && !self.modification {
-                            println!("Now I'm seeing the image");
+                            // println!("Now I'm seeing the image");
                             if custom_button(
                                 ui,
                                 "  Modify  ",
@@ -619,7 +619,7 @@ impl App for AppUtility {
                                 if ui.button("  Save Crop ").clicked() {
                                     self.modifier = Modifier::NotSelected;
                                     self.selection_mode = Selection::Area;
-                                    println!("I've cropped");
+                                    // println!("I've cropped");
                                     self.hide = true;
                                 }
                                 if ui.button("  X  ").on_hover_text("Close crop").clicked() {
@@ -710,7 +710,7 @@ impl App for AppUtility {
                     egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
                     Color32::WHITE,
                 );
-                println!("I'm viewing the image!!");
+                // println!("I'm viewing the image!!");
                 //qua vedo e salvo le modifiche che sto effettuando dopo aver schiacciato il bottone
                 if self.modification {
                     match self.modifier {
@@ -1010,6 +1010,11 @@ impl App for AppUtility {
                         cross_justify: true,
                     },
                     |ui| {
+                        match self.shortcuts.listener(ctx, self.view_image, self.selecting_area) {
+                            Some(action) => self.make_action(action, ctx, frame),
+                            None => {}
+                        }
+                        
                         if custom_button(
                             ui,
                             " 📷  Capture  ",
@@ -1078,11 +1083,11 @@ impl App for AppUtility {
             .open(&mut self.selecting_area)
             .show(ctx, |ui| {
                 ui.allocate_space(ui.available_size());
-                println!("Am I here?!");
+                // println!("Am I here?!");
             });
 
         if self.selecting_area {
-            println!("Do I need to be here?");
+            // println!("Do I need to be here?");
             let rect = window.unwrap().response.rect;
             let mut corr = 1.0;
             if cfg!(target_os = "windows") {
