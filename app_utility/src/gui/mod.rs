@@ -1313,9 +1313,11 @@ impl App for AppUtility {
         // Reset temp_shortcuts when settings window is closed
         if !self.show_settings {
             self.temp_shortcuts = self.shortcuts.clone();
+            self.show_error = false;
         }
 
-        Window::new("Error")
+        if self.show_settings {
+            Window::new("Error")
             .title_bar(true)
             .open(&mut self.show_error)
             .resizable(false)
@@ -1339,6 +1341,7 @@ impl App for AppUtility {
                 );
                 ui.add_space(10.0);
             });
+        }
 
         Window::new("Timer form")
             .title_bar(false)
